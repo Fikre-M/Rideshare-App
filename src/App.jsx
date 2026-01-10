@@ -1,10 +1,18 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import { SnackbarProvider } from 'notistack';
+
+// Hooks
 import { useAuth } from '@/context/AuthContext';
+import { useLocalStorage } from '@/hooks';
+
+// Styles
+import { GlobalStyles, theme as lightTheme, darkTheme } from '@/styles';
 
 // Layouts
 import MainLayout from '@/layouts/MainLayout';
@@ -60,35 +68,63 @@ const PublicOnlyRoute = ({ children }) => {
 };
 
 function App() {
+  const [darkMode, setDarkMode] = useLocalStorage('darkMode', false);
+  const theme = darkMode ? darkTheme : lightTheme;
+
+  // Add class to body for dark mode
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <Router>
-          <AuthProvider>
-            <Suspense fallback={<div>Loading...</div>}>
-              <Routes>
-                {/* Public Routes */}
-                <Route element={<PublicOnlyRoute><AuthLayout /></PublicOnlyRoute>}>
-                  <Route path="/login" element={<Login />} />
-                </Route>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <GlobalStyles />
+          <SnackbarProvider
+            maxSnack={3}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            autoHideDuration={3000}
+          >
+            <Router>
+              <Suspense fallback={<div>Loading...</div>}>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route element={<PublicOnlyRoute><AuthLayout /></PublicOnlyRoute>}>
+                    <Route path="/login" element={<Login />} />
+                  </Route>
 
-                {/* Protected Routes */}
-                <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/map" element={<MapView />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/dispatch" element={<Dispatch />} />
-                </Route>
+                  {/* Protected Routes */}
+                  <Route element={
+                    <ProtectedRoute>
+                      <MainLayout darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />
+                    </ProtectedRoute>
+                  }>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/map" element={<MapView />} />
+                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/dispatch" element={<Dispatch />} />
+                  </Route>
 
-                {/* 404 Route */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-            <Toaster position="top-right" />
-            <ReactQueryDevtools initialIsOpen={false} />
-          </AuthProvider>
-        </Router>
+                  {/* 404 Route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+              <Toaster position="top-right" />
+              <ReactQueryDevtools initialIsOpen={false} />
+            </Router>
+          </SnackbarProvider>
+        </ThemeProvider>
       </HelmetProvider>
     </QueryClientProvider>
   );
