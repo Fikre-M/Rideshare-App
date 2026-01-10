@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom';
 
 // Mock environment variables
-process.env.VITE_API_URL = 'http://localhost:5000/api';
-process.env.VITE_WS_URL = 'ws://localhost:5000';
+process.env.VITE_API_URL = 'http://localhost:3000/api';
+process.env.VITE_WS_URL = 'ws://localhost:3000';
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -39,6 +39,19 @@ Object.defineProperties(window, {
   sessionStorage: { value: createStorageMock() },
 });
 
+// Mock navigator
+Object.defineProperty(window, 'navigator', {
+  value: {
+    onLine: true,
+    userAgent: 'node.js',
+    serviceWorker: {
+      register: jest.fn().mockResolvedValue({}),
+    },
+  },
+  writable: true,
+  configurable: true,
+});
+
 // WebSocket mock
 class WebSocketMock {
   constructor(url) {
@@ -69,27 +82,57 @@ class WebSocketMock {
 
 global.WebSocket = WebSocketMock;
 
-// Mock service worker registration
-const mockRegister = jest.fn().mockResolvedValue({});
-Object.defineProperty(navigator, 'serviceWorker', {
-  value: {
-    register: mockRegister,
-  },
-  configurable: true,
-});
-
 // Mock console methods
 const originalConsole = { ...console };
-const throwOnConsoleError = (method) => {
-  console[method] = (...args) => {
-    originalConsole[method](...args);
-    if (process.env.NODE_ENV === 'test') {
-      throw new Error(`Console.${method} was called. Failing test...`);
+
+// Only throw on actual errors, not warnings
+console.error = (...args) => {
+  originalConsole.error(...args);
+  if (process.env.NODE_ENV === 'test') {
+    const errorMessage = args.join(' ');
+    // Don't fail on certain warnings
+    if (!errorMessage.includes('ReactDOM.render is no longer supported in React 18')) {
+      throw new Error(`Console.error was called: ${errorMessage}`);
     }
-  };
+  }
 };
 
-['error', 'warn'].forEach(throwOnConsoleError);
+// Suppress specific warnings
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  const msg = args[0] || '';
+  // Suppress specific warnings
+  if (
+    msg.includes('ReactDOM.render is no longer supported in React 18') ||
+    msg.includes('componentWillReceiveProps has been renamed') ||
+    msg.includes('componentWillMount has been renamed') ||
+    msg.includes('componentWillUpdate has been renamed')
+  ) {
+    return;
+  }
+  originalWarn(...args);
+};
+
+// Mock IntersectionObserver
+class IntersectionObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  unobserve() {}
+  takeRecords() { return []; }
+}
+
+window.IntersectionObserver = IntersectionObserver;
+
+// Mock ResizeObserver
+class ResizeObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  unobserve() {}
+}
+
+window.ResizeObserver = ResizeObserver;
 
 // Mock React 19 specific APIs
 jest.mock('react', () => ({

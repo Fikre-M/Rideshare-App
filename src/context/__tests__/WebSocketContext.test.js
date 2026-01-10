@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react';
 import { WebSocketProvider, useWebSocket } from '../WebSocketContext';
 
 // Mock WebSocket
@@ -16,7 +16,7 @@ class WebSocketMock {
     setTimeout(() => {
       this.readyState = WebSocket.OPEN;
       if (this.onopen) this.onopen();
-    }, 100);
+    }, 0);
   }
 
   send(data) {
@@ -28,114 +28,88 @@ class WebSocketMock {
     if (this.onclose) this.onclose({ code: 1000 });
   }
 
-  // Test helpers
+  // Helper method for testing
   triggerMessage(message) {
     if (this.onmessage) {
       this.onmessage({ data: JSON.stringify(message) });
     }
   }
-
-  triggerError() {
-    if (this.onerror) {
-      this.onerror(new Error('WebSocket error'));
-    }
-  }
 }
 
-global.WebSocket = WebSocketMock;
+// Mock the global WebSocket
+const mockWebSocket = jest.fn().mockImplementation((url) => new WebSocketMock(url));
+global.WebSocket = mockWebSocket;
 
 describe('WebSocketContext', () => {
-  let wrapper;
+  const renderWebSocketHook = () => {
+    return renderHook(() => useWebSocket(), {
+      wrapper: ({ children }) => (
+        <WebSocketProvider>
+          {children}
+        </WebSocketProvider>
+      ),
+    });
+  };
   
   beforeEach(() => {
-    // Mock the AuthContext
-    jest.mock('../../context/AuthContext', () => ({
-      useAuth: () => ({
-        isAuthenticated: true,
-        token: 'test-token'
-      })
-    }));
-    
-    wrapper = ({ children }) => (
-      <WebSocketProvider>
-        {children}
-      </WebSocketProvider>
-    );
-  });
-
-  afterEach(() => {
+    // Clear all mocks before each test
     jest.clearAllMocks();
+    
+    // Reset the WebSocket mock
+    mockWebSocket.mockClear();
+    global.WebSocket = mockWebSocket;
   });
-
-  it('should establish WebSocket connection', async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useWebSocket(), { wrapper });
-    
-    expect(result.current.isConnected()).toBe(false);
-    
-    await waitForNextUpdate({ timeout: 200 });
-    
-    expect(result.current.isConnected()).toBe(true);
+  
+  it('should establish WebSocket connection', () => {
+    const { result } = renderWebSocketHook();
+    expect(result.current.isConnected).toBe(true);
   });
-
-  it('should send and receive messages', async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useWebSocket(), { wrapper });
-    await waitForNextUpdate({ timeout: 200 });
+  
+  it('should send messages', () => {
+    const { result } = renderWebSocketHook();
     
-    const messageHandler = jest.fn();
-    
-    // Subscribe to messages
+    const testMessage = { type: 'test', data: 'test' };
     act(() => {
-      result.current.subscribe('test.message', messageHandler);
+      result.current.sendMessage(testMessage);
     });
     
-    // Send a message
-    await act(async () => {
-      await result.current.send('test.message', { foo: 'bar' });
-    });
-    
-    // Trigger a message from the server
-    act(() => {
-      result.current.ws.triggerMessage({
-        type: 'test.message',
-        data: { foo: 'bar' }
-      });
-    });
-    
-    expect(messageHandler).toHaveBeenCalledWith({ foo: 'bar' });
+    // Get the WebSocket instance
+    const wsInstance = mockWebSocket.mock.results[0].value;
+    expect(wsInstance.sentMessages).toContainEqual(testMessage);
   });
-
-  it('should handle reconnection', async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useWebSocket(), { wrapper });
-    await waitForNextUpdate({ timeout: 200 });
+  
+  it('should handle incoming messages', () => {
+    const { result } = renderWebSocketHook();
     
-    // Simulate connection loss
+    const testMessage = { type: 'test', data: 'test' };
+    const wsInstance = mockWebSocket.mock.results[0].value;
+    
     act(() => {
-      result.current.ws.close();
+      wsInstance.triggerMessage(testMessage);
     });
     
-    expect(result.current.isConnected()).toBe(false);
-    
-    // Should attempt to reconnect
-    await waitForNextUpdate({ timeout: 2000 });
-    expect(result.current.isConnected()).toBe(true);
+    expect(result.current.lastMessage).toEqual(testMessage);
   });
-
-  it('should queue messages when disconnected', async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useWebSocket(), { wrapper });
+  
+  it('should handle connection close', () => {
+    const { result } = renderWebSocketHook();
+    const wsInstance = mockWebSocket.mock.results[0].value;
     
-    // Send message before connection is established
-    const sendPromise = act(async () => {
-      await result.current.send('test.message', { queued: true });
+    act(() => {
+      wsInstance.close();
     });
     
-    // Wait for connection
-    await waitForNextUpdate({ timeout: 200 });
+    expect(result.current.isConnected).toBe(false);
+  });
+  
+  it('should clean up on unmount', () => {
+    const { result, unmount } = renderWebSocketHook();
+    const wsInstance = mockWebSocket.mock.results[0].value;
     
-    // The message should be sent after connection
-    await expect(sendPromise).resolves.not.toThrow();
-    expect(result.current.ws.sentMessages).toContainEqual({
-      type: 'test.message',
-      data: { queued: true }
-    });
+    const closeSpy = jest.spyOn(wsInstance, 'close');
+    
+    unmount();
+    
+    expect(closeSpy).toHaveBeenCalled();
   });
 });

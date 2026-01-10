@@ -4,7 +4,7 @@
 
 const isTest = process.env.NODE_ENV === 'test';
 
-export default function babelConfig(api) {
+module.exports = function (api) {
   const isTestEnv = api.env('test');
   
   // Cache the configuration based on the environment
@@ -64,6 +64,9 @@ export default function babelConfig(api) {
       cssPropOptimization: true,
     }],
     
+    // Transform import.meta in test environment
+    isTestEnv && './babel-plugin-transform-import-meta',
+    
     // Better debugging with component names in React DevTools
     process.env.NODE_ENV === 'development' && 'react-refresh/babel',
   ].filter(Boolean);
@@ -81,4 +84,4 @@ export default function babelConfig(api) {
       privateFieldsAsProperties: true,
     },
   };
-}
+};
