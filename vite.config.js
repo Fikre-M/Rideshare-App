@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
+    server: {
+      port: 3002,
+      strictPort: true,
+      open: true
+    },
     css: {
       postcss: './postcss.config.cjs'
     },
@@ -25,14 +30,8 @@ export default defineConfig(({ mode }) => {
       }),
     ].filter(Boolean),
     
-    server: {
-      port: 8000,
-      open: true,
-      strictPort: true,
-    },
-    
     preview: {
-      port: 8000,
+      port: 3003,
       strictPort: true,
     },
     
