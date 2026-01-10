@@ -1,5 +1,8 @@
-// Import Jest DOM for better assertions
 import '@testing-library/jest-dom';
+
+// Mock environment variables
+process.env.VITE_API_URL = 'http://localhost:5000/api';
+process.env.VITE_WS_URL = 'ws://localhost:5000';
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -8,21 +11,19 @@ Object.defineProperty(window, 'matchMedia', {
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
     addEventListener: jest.fn(),
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   })),
 });
 
-// Mock localStorage
-const localStorageMock = (() => {
+// Storage mocks
+const createStorageMock = () => {
   let store = {};
   return {
     getItem: jest.fn((key) => store[key] || null),
     setItem: jest.fn((key, value) => {
-      store[key] = value.toString();
+      store[key] = String(value);
     }),
     removeItem: jest.fn((key) => {
       delete store[key];
@@ -31,45 +32,14 @@ const localStorageMock = (() => {
       store = {};
     }),
   };
-})();
+};
 
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
+Object.defineProperties(window, {
+  localStorage: { value: createStorageMock() },
+  sessionStorage: { value: createStorageMock() },
 });
 
-// Mock sessionStorage
-const sessionStorageMock = (() => {
-  let store = {};
-  return {
-    getItem: jest.fn((key) => store[key] || null),
-    setItem: jest.fn((key, value) => {
-      store[key] = value.toString();
-    }),
-    removeItem: jest.fn((key) => {
-      delete store[key];
-    }),
-    clear: jest.fn(() => {
-      store = {};
-    }),
-  };
-})();
-
-Object.defineProperty(window, 'sessionStorage', {
-  value: sessionStorageMock,
-});
-
-// Mock navigator.onLine
-Object.defineProperty(window, 'navigator', {
-  value: {
-    onLine: true,
-    serviceWorker: {
-      register: jest.fn().mockResolvedValue({}),
-    },
-  },
-  writable: true,
-});
-
-// Mock WebSocket
+// WebSocket mock
 class WebSocketMock {
   constructor(url) {
     this.url = url;
@@ -99,16 +69,32 @@ class WebSocketMock {
 
 global.WebSocket = WebSocketMock;
 
-// Mock console.error to fail tests on console errors
-const originalConsoleError = console.error;
-console.error = (...args) => {
-  originalConsoleError(...args);
-  throw new Error('Console error was called. Failing test...');
+// Mock service worker registration
+const mockRegister = jest.fn().mockResolvedValue({});
+Object.defineProperty(navigator, 'serviceWorker', {
+  value: {
+    register: mockRegister,
+  },
+  configurable: true,
+});
+
+// Mock console methods
+const originalConsole = { ...console };
+const throwOnConsoleError = (method) => {
+  console[method] = (...args) => {
+    originalConsole[method](...args);
+    if (process.env.NODE_ENV === 'test') {
+      throw new Error(`Console.${method} was called. Failing test...`);
+    }
+  };
 };
 
-// Mock console.warn to fail tests on console warnings
-const originalConsoleWarn = console.warn;
-console.warn = (...args) => {
-  originalConsoleWarn(...args);
-  throw new Error('Console warning was called. Failing test...');
-};
+['error', 'warn'].forEach(throwOnConsoleError);
+
+// Mock React 19 specific APIs
+jest.mock('react', () => ({
+  ...jest.requireActual('react'),
+  useId: () => 'test-id',
+  useTransition: () => [false, (fn) => Promise.resolve(fn())],
+  useDeferredValue: (value) => value,
+}));
