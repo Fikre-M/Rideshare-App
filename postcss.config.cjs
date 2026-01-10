@@ -1,7 +1,8 @@
-// postcss.config.cjs
+// postcss.config.mjs
 module.exports = {
   plugins: {
-    'postcss-nested': {},
+    'postcss-import': {},
+    'tailwindcss/nesting': {},
     tailwindcss: {},
     autoprefixer: {},
   },
