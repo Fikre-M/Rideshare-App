@@ -1,0 +1,226 @@
+import { Box, Button, Container, Typography, Grid, Paper, styled } from '@mui/material';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useTheme } from '@mui/material/styles';
+import { useAuth } from '@/context/AuthContext';
+
+const HeroSection = styled(Box)(({ theme }) => ({
+  minHeight: '80vh',
+  display: 'flex',
+  alignItems: 'center',
+  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+  color: theme.palette.primary.contrastText,
+  padding: theme.spacing(8, 0),
+}));
+
+const FeatureCard = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  height: '100%',
+  transition: 'transform 0.3s ease-in-out',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+  },
+}));
+
+const features = [
+  {
+    title: 'Efficient Fleet Management',
+    description: 'Track and manage your entire fleet in real-time with our intuitive dashboard.',
+    icon: '🚚',
+  },
+  {
+    title: 'Route Optimization',
+    description: 'Optimize delivery routes to save time and reduce fuel costs.',
+    icon: '🗺️',
+  },
+  {
+    title: 'Real-time Tracking',
+    description: 'Monitor your vehicles and shipments with live GPS tracking.',
+    icon: '📍',
+  },
+];
+
+const LandingPage = () => {
+  const theme = useTheme();
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <HeroSection>
+        <Container maxWidth="lg">
+          <Grid container spacing={6} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                <Typography
+                  variant="h2"
+                  component="h1"
+                  gutterBottom
+                  sx={{
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                    mb: 3,
+                  }}
+                >
+                  Streamline Your Transportation Operations
+                </Typography>
+                <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
+                  The all-in-one platform for managing your fleet, routes, and deliveries with ease.
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+                  <Button
+                    component={Link}
+                    to={isAuthenticated ? '/dashboard' : '/login'}
+                    variant="contained"
+                    color="secondary"
+                    size="large"
+                    sx={{
+                      px: 4,
+                      py: 1.5,
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
+                  </Button>
+                  <Button
+                    component={Link}
+                    to="/features"
+                    variant="outlined"
+                    color="inherit"
+                    size="large"
+                    sx={{
+                      px: 4,
+                      py: 1.5,
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                      color: 'white',
+                      '&:hover': {
+                        borderColor: 'white',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      },
+                    }}
+                  >
+                    Learn More
+                  </Button>
+                </Box>
+              </motion.div>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                <Box
+                  component="img"
+                  src="/images/transportation-hero.svg"
+                  alt="Transportation Dashboard"
+                  sx={{
+                    width: '100%',
+                    height: 'auto',
+                    borderRadius: 2,
+                    boxShadow: theme.shadows[10],
+                  }}
+                />
+              </motion.div>
+            </Grid>
+          </Grid>
+        </Container>
+      </HeroSection>
+
+      <Box component="section" sx={{ py: 10, bgcolor: 'background.default' }}>
+        <Container maxWidth="lg">
+          <Typography
+            variant="h3"
+            component="h2"
+            align="center"
+            sx={{ mb: 8, fontWeight: 700 }}
+          >
+            Why Choose Our Platform?
+          </Typography>
+          <Grid container spacing={4}>
+            {features.map((feature, index) => (
+              <Grid item xs={12} md={4} key={index}>
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <FeatureCard elevation={3}>
+                    <Typography variant="h3" sx={{ mb: 2, fontSize: '2.5rem' }}>
+                      {feature.icon}
+                    </Typography>
+                    <Typography variant="h5" component="h3" gutterBottom sx={{ fontWeight: 600 }}>
+                      {feature.title}
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      {feature.description}
+                    </Typography>
+                  </FeatureCard>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      <Box component="footer" sx={{ bgcolor: 'background.paper', py: 6, mt: 'auto' }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={4} justifyContent="space-between">
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6" gutterBottom>
+                Transportation Ops Platform
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Streamlining your transportation and logistics operations with cutting-edge technology.
+              </Typography>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2}>
+              <Typography variant="subtitle1" gutterBottom>
+                Product
+              </Typography>
+              <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                <li><Button component={Link} to="/features" color="inherit">Features</Button></li>
+                <li><Button component={Link} to="/pricing" color="inherit">Pricing</Button></li>
+                <li><Button component={Link} to="/integrations" color="inherit">Integrations</Button></li>
+              </Box>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2}>
+              <Typography variant="subtitle1" gutterBottom>
+                Resources
+              </Typography>
+              <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                <li><Button component={Link} to="/blog" color="inherit">Blog</Button></li>
+                <li><Button component={Link} to="/documentation" color="inherit">Documentation</Button></li>
+                <li><Button component={Link} to="/support" color="inherit">Support</Button></li>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={4} md={2}>
+              <Typography variant="subtitle1" gutterBottom>
+                Company
+              </Typography>
+              <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                <li><Button component={Link} to="/about" color="inherit">About Us</Button></li>
+                <li><Button component={Link} to="/careers" color="inherit">Careers</Button></li>
+                <li><Button component={Link} to="/contact" color="inherit">Contact</Button></li>
+              </Box>
+            </Grid>
+          </Grid>
+          <Box sx={{ mt: 6, pt: 4, borderTop: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="body2" color="text.secondary" align="center">
+              © {new Date().getFullYear()} Transportation Ops Platform. All rights reserved.
+            </Typography>
+          </Box>
+        </Container>
+      </Box>
+    </Box>
+  );
+};
+
+export default LandingPage;

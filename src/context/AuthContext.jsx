@@ -103,32 +103,55 @@ export const AuthProvider = ({ children, navigate }) => {
     return () => clearInterval(intervalId);
   }, [token, checkTokenExpiration, refreshToken, decodeToken]);
 
-  const login = async (credentials) => {
+  const login = useCallback(async (email, password) => {
     try {
       setIsLoading(true);
-      // Mock response
-      const mockToken = "mock-jwt-token";
-      const mockUser = {
-        id: "1",
-        name: "Admin User",
-        email: "admin@example.com",
-        roles: ["admin"],
-      };
-
+      // Mock user validation - replace with actual API call in production
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+      
+      // Mock user data - replace with actual API call
+      const mockUsers = [
+        { email: 'admin@example.com', password: 'admin123', name: 'Admin User', roles: ['admin'] },
+        { email: 'user@example.com', password: 'user123', name: 'Regular User', roles: ['user'] },
+      ];
+      
+      const user = mockUsers.find(u => u.email === email && u.password === password);
+      
+      if (!user) {
+        throw new Error('Invalid email or password');
+      }
+      
+      // Create a mock JWT token with user data
+      const mockToken = `mock-jwt-token-${Date.now()}`;
       localStorage.setItem(TOKEN_KEY, mockToken);
+      
+      // Set user data in state
+      const userData = {
+        id: `user-${Date.now()}`,
+        email: user.email,
+        name: user.name,
+        roles: user.roles,
+        exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 hours from now
+      };
+      
       setToken(mockToken);
-      setUser(mockUser);
-
-      toast.success("Login successful");
-      return { success: true };
+      setUser(userData);
+      
+      // Store user data in localStorage for persistence
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      toast.success('Login successful!');
+      return true;
     } catch (error) {
-      console.error("Login failed:", error);
-      toast.error(error.message || "Login failed. Please try again.");
-      return { success: false, error: error.message };
+      console.error('Login failed:', error);
+      toast.error(error.message || 'Login failed. Please try again.');
+      return false;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const logout = (message = "You have been logged out.") => {
     localStorage.removeItem(TOKEN_KEY);
