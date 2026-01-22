@@ -12,12 +12,15 @@ import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider, createTheme, useTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { SnackbarProvider } from "notistack";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/common/LoadingScreen";
 import ChatBot, { ChatTrigger } from "./components/ai/ChatBot";
 import AppRating from "./components/common/AppRating";
+import ProtectedRoute from "./components/common/ProtectedRoute";
 import config from "./config/config";
+import { queryClient } from "./lib/queryClient";
 
 // Initialize error tracking (e.g., Sentry)
 if (config.analytics.sentryDsn) {
@@ -202,17 +205,6 @@ const theme = createTheme({
 
 
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const location = useLocation();
-
-  if (isLoading) return <LoadingScreen />;
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-  return children;
-};
-
 const PublicRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
@@ -297,39 +289,41 @@ const App = () => {
   const [chatOpen, setChatOpen] = useState(false);
   
   return (
-    <Router>
-      <HelmetProvider>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <SnackbarProvider 
-            maxSnack={3}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            autoHideDuration={5000}
-            preventDuplicate
-          >
-            <GlobalErrorHandler>
-              <AuthProvider>
-                <Suspense fallback={<LoadingScreen />}>
-                  <AppRoutes />
-                </Suspense>
-                
-                {/* AI ChatBot - Available globally on all pages */}
-                <ChatTrigger onClick={() => setChatOpen(true)} />
-                <ChatBot open={chatOpen} onClose={() => setChatOpen(false)} />
-                
-                {/* App Rating Component */}
-                <AppRating />
-                
-                <Toaster position="top-right" />
-              </AuthProvider>
-            </GlobalErrorHandler>
-          </SnackbarProvider>
-        </ThemeProvider>
-      </HelmetProvider>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <HelmetProvider>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <SnackbarProvider 
+              maxSnack={3}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              autoHideDuration={5000}
+              preventDuplicate
+            >
+              <GlobalErrorHandler>
+                <AuthProvider>
+                  <Suspense fallback={<LoadingScreen />}>
+                    <AppRoutes />
+                  </Suspense>
+                  
+                  {/* AI ChatBot - Available globally on all pages */}
+                  <ChatTrigger onClick={() => setChatOpen(true)} />
+                  <ChatBot open={chatOpen} onClose={() => setChatOpen(false)} />
+                  
+                  {/* App Rating Component */}
+                  <AppRating />
+                  
+                  <Toaster position="top-right" />
+                </AuthProvider>
+              </GlobalErrorHandler>
+            </SnackbarProvider>
+          </ThemeProvider>
+        </HelmetProvider>
+      </Router>
+    </QueryClientProvider>
   );
 };
 
