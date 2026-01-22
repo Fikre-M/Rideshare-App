@@ -5,7 +5,6 @@ import {
   Route,
   Navigate,
   useLocation,
-  useNavigate,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -23,6 +22,7 @@ const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
 const Login = lazy(() => import("./pages/auth/Login"));
 const Register = lazy(() => import("./pages/auth/Register"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const theme = createTheme({
   palette: {
@@ -232,6 +232,7 @@ const AppRoutes = () => {
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/not-found" element={<NotFound />} />
           <Route
             path="/login"
             element={
@@ -256,7 +257,7 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
       
@@ -268,7 +269,17 @@ const AppRoutes = () => {
         </>
       )}
       
-      <ReactQueryDevtools initialIsOpen={false} />
+      <ReactQueryDevtools 
+        initialIsOpen={false} 
+        position="bottom-right"
+        buttonPosition="bottom-right"
+        panelProps={{
+          style: {
+            zIndex: 1000,
+            right: '80px', // Move it away from the chatbot
+          }
+        }}
+      />
     </>
   );
 };

@@ -144,16 +144,29 @@ const LandingPage = () => {
                 transition={{ duration: 0.8, delay: 0.2 }}
               >
                 <Box
-                  component="img"
-                  src="/images/transportation-hero.svg"
-                  alt="Transportation Dashboard"
                   sx={{
-                    width: '100%',
-                    height: 'auto',
+                    height: 400,
                     borderRadius: 2,
-                    boxShadow: theme.shadows[10],
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    color: 'white',
                   }}
-                />
+                >
+                  <Typography variant="h2" sx={{ mb: 2, fontSize: '4rem' }}>
+                    🤖
+                  </Typography>
+                  <Typography variant="h5" sx={{ mb: 2, textAlign: 'center' }}>
+                    AI-Powered Platform
+                  </Typography>
+                  <Typography variant="body1" sx={{ textAlign: 'center', opacity: 0.8 }}>
+                    Experience the future of transportation with intelligent algorithms
+                  </Typography>
+                </Box>
               </motion.div>
             </Grid>
           </Grid>
@@ -213,9 +226,9 @@ const LandingPage = () => {
                 Product
               </Typography>
               <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-                <li><Button component={Link} to="/features" color="inherit">Features</Button></li>
-                <li><Button component={Link} to="/pricing" color="inherit">Pricing</Button></li>
-                <li><Button component={Link} to="/integrations" color="inherit">Integrations</Button></li>
+                <li><Button component={Link} to="/not-found" color="inherit">Features</Button></li>
+                <li><Button component={Link} to="/not-found" color="inherit">Pricing</Button></li>
+                <li><Button component={Link} to="/not-found" color="inherit">Integrations</Button></li>
               </Box>
             </Grid>
             <Grid item xs={6} sm={4} md={2}>
@@ -223,9 +236,9 @@ const LandingPage = () => {
                 Resources
               </Typography>
               <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-                <li><Button component={Link} to="/blog" color="inherit">Blog</Button></li>
-                <li><Button component={Link} to="/documentation" color="inherit">Documentation</Button></li>
-                <li><Button component={Link} to="/support" color="inherit">Support</Button></li>
+                <li><Button component={Link} to="/not-found" color="inherit">Blog</Button></li>
+                <li><Button component={Link} to="/not-found" color="inherit">Documentation</Button></li>
+                <li><Button component={Link} to="/not-found" color="inherit">Support</Button></li>
               </Box>
             </Grid>
             <Grid item xs={12} sm={4} md={2}>
@@ -233,9 +246,9 @@ const LandingPage = () => {
                 Company
               </Typography>
               <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-                <li><Button component={Link} to="/about" color="inherit">About Us</Button></li>
-                <li><Button component={Link} to="/careers" color="inherit">Careers</Button></li>
-                <li><Button component={Link} to="/contact" color="inherit">Contact</Button></li>
+                <li><Button component={Link} to="/not-found" color="inherit">About Us</Button></li>
+                <li><Button component={Link} to="/not-found" color="inherit">Careers</Button></li>
+                <li><Button component={Link} to="/not-found" color="inherit">Contact</Button></li>
               </Box>
             </Grid>
           </Grid>

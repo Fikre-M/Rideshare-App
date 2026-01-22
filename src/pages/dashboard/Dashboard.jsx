@@ -6,6 +6,7 @@ import {
   Navigate,
   useLocation,
   Link,
+  useNavigate,
 } from "react-router-dom";
 import { 
   Box, 
@@ -37,6 +38,7 @@ import {
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import LoadingScreen from '../../components/common/LoadingScreen';
+import NotificationCenter from '../../components/notifications/NotificationCenter';
 
 // Lazy load pages
 const DashboardHome = lazy(() => import('../Dashboard'));
@@ -44,11 +46,13 @@ const BookRide = lazy(() => import('../../components/booking/RideBooking'));
 const Analytics = lazy(() => import('../Analytics'));
 const Dispatch = lazy(() => import('../Dispatch'));
 const MapView = lazy(() => import('../MapView'));
+const Profile = lazy(() => import('../Profile'));
 
 const drawerWidth = 240;
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const location = useLocation();
 
@@ -98,6 +102,7 @@ const Dashboard = () => {
             AI Rideshare Platform
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <NotificationCenter />
             <AIIcon sx={{ mr: 1, color: 'primary.main' }} />
             <Typography variant="body2" sx={{ mr: 2 }}>
               AI-Powered
@@ -129,7 +134,7 @@ const Dashboard = () => {
               open={Boolean(anchorEl)}
               onClose={handleClose}
             >
-              <MenuItem onClick={handleClose}>
+              <MenuItem onClick={handleClose} component={Link} to="/dashboard/profile">
                 <AccountIcon sx={{ mr: 1 }} />
                 Profile
               </MenuItem>
@@ -159,7 +164,7 @@ const Dashboard = () => {
         anchor="left"
       >
         <Toolbar>
-          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
             <AIIcon sx={{ mr: 1, color: 'primary.main' }} />
             <Typography variant="h6" noWrap>
               AI Rideshare
@@ -215,6 +220,7 @@ const Dashboard = () => {
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/dispatch" element={<Dispatch />} />
             <Route path="/map" element={<MapView />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Suspense>
