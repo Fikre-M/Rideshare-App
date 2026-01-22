@@ -24,19 +24,34 @@ const FeatureCard = styled(Paper)(({ theme }) => ({
 
 const features = [
   {
-    title: 'Efficient Fleet Management',
-    description: 'Track and manage your entire fleet in real-time with our intuitive dashboard.',
-    icon: '🚚',
+    title: 'AI-Powered Smart Matching',
+    description: 'Advanced algorithms instantly match passengers with the best available drivers based on location, preferences, and real-time conditions.',
+    icon: '🤖',
   },
   {
-    title: 'Route Optimization',
-    description: 'Optimize delivery routes to save time and reduce fuel costs.',
+    title: 'Dynamic AI Pricing',
+    description: 'Machine learning models analyze demand, traffic, weather, and events to provide fair, real-time pricing optimization.',
+    icon: '💰',
+  },
+  {
+    title: 'Intelligent Route Optimization',
+    description: 'AI algorithms calculate the most efficient routes considering traffic patterns, road conditions, and fuel efficiency.',
     icon: '🗺️',
   },
   {
-    title: 'Real-time Tracking',
-    description: 'Monitor your vehicles and shipments with live GPS tracking.',
-    icon: '📍',
+    title: 'Predictive Analytics',
+    description: 'Forecast demand patterns, revenue projections, and operational insights using advanced machine learning models.',
+    icon: '📊',
+  },
+  {
+    title: 'AI Chat Assistant',
+    description: 'Intelligent chatbot provides 24/7 customer support, trip planning, and real-time assistance for all users.',
+    icon: '💬',
+  },
+  {
+    title: 'Real-time Demand Prediction',
+    description: 'ML models predict ride demand hotspots and peak times to optimize driver deployment and reduce wait times.',
+    icon: '📈',
   },
 ];
 
@@ -65,10 +80,10 @@ const LandingPage = () => {
                     mb: 3,
                   }}
                 >
-                  Streamline Your Transportation Operations
+                  AI-Powered Rideshare Platform
                 </Typography>
                 <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-                  The all-in-one platform for managing your fleet, routes, and deliveries with ease.
+                  Experience the future of transportation with intelligent matching, dynamic pricing, and predictive analytics powered by advanced AI.
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
                   <Button
@@ -141,7 +156,7 @@ const LandingPage = () => {
             align="center"
             sx={{ mb: 8, fontWeight: 700 }}
           >
-            Why Choose Our Platform?
+            Why Choose Our AI Platform?
           </Typography>
           <Grid container spacing={4}>
             {features.map((feature, index) => (
@@ -175,10 +190,10 @@ const LandingPage = () => {
           <Grid container spacing={4} justifyContent="space-between">
             <Grid item xs={12} md={4}>
               <Typography variant="h6" gutterBottom>
-                Transportation Ops Platform
+                AI Rideshare Platform
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Streamlining your transportation and logistics operations with cutting-edge technology.
+                Revolutionizing transportation with artificial intelligence, smart matching, and predictive analytics.
               </Typography>
             </Grid>
             <Grid item xs={6} sm={4} md={2}>
@@ -214,7 +229,7 @@ const LandingPage = () => {
           </Grid>
           <Box sx={{ mt: 6, pt: 4, borderTop: '1px solid', borderColor: 'divider' }}>
             <Typography variant="body2" color="text.secondary" align="center">
-              © {new Date().getFullYear()} Transportation Ops Platform. All rights reserved.
+              © {new Date().getFullYear()} AI Rideshare Platform. All rights reserved.
             </Typography>
           </Box>
         </Container>

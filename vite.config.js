@@ -8,8 +8,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     server: {
-      port: 3002,
-      strictPort: true,
+      port: 8000,
+      strictPort: false,
       open: true,
     },
 

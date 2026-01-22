@@ -1,156 +1,220 @@
-import { Box, Container, Typography, Grid, Paper } from '@mui/material';
-import { motion } from 'framer-motion';
-import { useAuth } from '@/context/AuthContext';
+import { Suspense, lazy } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  Link,
+} from "react-router-dom";
+import { 
+  Box, 
+  Drawer, 
+  AppBar, 
+  Toolbar, 
+  List, 
+  Typography, 
+  Divider, 
+  ListItem, 
+  ListItemButton, 
+  ListItemIcon, 
+  ListItemText,
+  IconButton,
+  Avatar,
+  Menu,
+  MenuItem,
+} from '@mui/material';
+import {
+  Dashboard as DashboardIcon,
+  Analytics as AnalyticsIcon,
+  LocalShipping as DispatchIcon,
+  Map as MapIcon,
+  AccountCircle as AccountIcon,
+  Logout as LogoutIcon,
+  SmartToy as AIIcon,
+} from '@mui/icons-material';
+import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import LoadingScreen from '../../components/common/LoadingScreen';
+
+// Lazy load pages
+const DashboardHome = lazy(() => import('../Dashboard'));
+const Analytics = lazy(() => import('../Analytics'));
+const Dispatch = lazy(() => import('../Dispatch'));
+const MapView = lazy(() => import('../MapView'));
+
+const drawerWidth = 240;
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const location = useLocation();
+
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    handleClose();
+    logout();
+  };
+
+  const menuItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+    { text: 'AI Analytics', icon: <AnalyticsIcon />, path: '/dashboard/analytics' },
+    { text: 'AI Dispatch', icon: <DispatchIcon />, path: '/dashboard/dispatch' },
+    { text: 'Map View', icon: <MapIcon />, path: '/dashboard/map' },
+  ];
+
+  const isActive = (path) => {
+    if (path === '/dashboard') {
+      return location.pathname === '/dashboard' || location.pathname === '/dashboard/';
+    }
+    return location.pathname.startsWith(path);
+  };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', p: 3 }}>
-      <Container maxWidth="xl">
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Welcome back, {user?.name || 'User'}!
+    <Box sx={{ display: 'flex' }}>
+      {/* App Bar */}
+      <AppBar
+        position="fixed"
+        sx={{
+          width: `calc(100% - ${drawerWidth}px)`,
+          ml: `${drawerWidth}px`,
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          boxShadow: 1,
+        }}
+      >
+        <Toolbar>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            AI Rideshare Platform
           </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Here's what's happening with your transportation operations.
-          </Typography>
-        </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <AIIcon sx={{ mr: 1, color: 'primary.main' }} />
+            <Typography variant="body2" sx={{ mr: 2 }}>
+              AI-Powered
+            </Typography>
+            <IconButton
+              size="large"
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleMenu}
+              color="inherit"
+            >
+              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+                {user?.name?.charAt(0) || 'U'}
+              </Avatar>
+            </IconButton>
+            <Menu
+              id="menu-appbar"
+              anchorEl={anchorEl}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              open={Boolean(anchorEl)}
+              onClose={handleClose}
+            >
+              <MenuItem onClick={handleClose}>
+                <AccountIcon sx={{ mr: 1 }} />
+                Profile
+              </MenuItem>
+              <MenuItem onClick={handleLogout}>
+                <LogoutIcon sx={{ mr: 1 }} />
+                Logout
+              </MenuItem>
+            </Menu>
+          </Box>
+        </Toolbar>
+      </AppBar>
 
-        <Grid container spacing={3}>
-          {/* Stats Cards */}
-          {[
-            { title: 'Total Vehicles', value: '24', change: '+12%' },
-            { title: 'Active Routes', value: '15', change: '+5%' },
-            { title: 'Completed Trips', value: '342', change: '+23%' },
-            { title: 'On-time Delivery', value: '94%', change: '+2%' },
-          ].map((stat, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
+      {/* Sidebar */}
+      <Drawer
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            bgcolor: 'background.paper',
+            borderRight: '1px solid',
+            borderColor: 'divider',
+          },
+        }}
+        variant="permanent"
+        anchor="left"
+      >
+        <Toolbar>
+          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+            <AIIcon sx={{ mr: 1, color: 'primary.main' }} />
+            <Typography variant="h6" noWrap>
+              AI Rideshare
+            </Typography>
+          </Box>
+        </Toolbar>
+        <Divider />
+        <List>
+          {menuItems.map((item) => (
+            <ListItem key={item.text} disablePadding>
+              <ListItemButton
+                component={Link}
+                to={item.path}
+                selected={isActive(item.path)}
+                sx={{
+                  '&.Mui-selected': {
+                    bgcolor: 'primary.main',
+                    color: 'primary.contrastText',
+                    '&:hover': {
+                      bgcolor: 'primary.dark',
+                    },
+                    '& .MuiListItemIcon-root': {
+                      color: 'primary.contrastText',
+                    },
+                  },
+                }}
               >
-                <Paper
-                  sx={{
-                    p: 3,
-                    height: '100%',
-                    borderRadius: 2,
-                    bgcolor: 'background.paper',
-                  }}
-                >
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    {stat.title}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'baseline' }}>
-                    <Typography variant="h4" component="div" sx={{ fontWeight: 600, mr: 1 }}>
-                      {stat.value}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: stat.change.startsWith('+') ? 'success.main' : 'error.main',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {stat.change}
-                    </Typography>
-                  </Box>
-                </Paper>
-              </motion.div>
-            </Grid>
+                <ListItemIcon>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
           ))}
-        </Grid>
+        </List>
+      </Drawer>
 
-        <Grid container spacing={3} sx={{ mt: 2 }}>
-          {/* Recent Activities */}
-          <Grid item xs={12} md={8}>
-            <Paper
-              sx={{
-                p: 3,
-                height: '100%',
-                borderRadius: 2,
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Typography variant="h6" gutterBottom>
-                Recent Activities
-              </Typography>
-              <Box>
-                {[
-                  'Vehicle #T-2456 completed delivery to Downtown Hub',
-                  'New maintenance scheduled for Vehicle #T-1892',
-                  'Route optimization completed for tomorrow\'s deliveries',
-                  'Driver check-in: John D. started shift at 8:00 AM',
-                  'New delivery request received from Acme Corp',
-                ].map((activity, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      py: 1.5,
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      '&:last-child': { borderBottom: 'none' },
-                    }}
-                  >
-                    <Typography variant="body2">{activity}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date().toLocaleTimeString()}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            </Paper>
-          </Grid>
-
-          {/* Quick Actions */}
-          <Grid item xs={12} md={4}>
-            <Paper
-              sx={{
-                p: 3,
-                height: '100%',
-                borderRadius: 2,
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Typography variant="h6" gutterBottom>
-                Quick Actions
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {[
-                  { label: 'Add New Vehicle', icon: '🚚' },
-                  { label: 'Create New Route', icon: '🗺️' },
-                  { label: 'Schedule Maintenance', icon: '🔧' },
-                  { label: 'Generate Report', icon: '📊' },
-                ].map((action, index) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{ x: 5 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        cursor: 'pointer',
-                        '&:hover': {
-                          bgcolor: 'action.hover',
-                        },
-                      }}
-                    >
-                      <Box sx={{ fontSize: '1.5rem' }}>{action.icon}</Box>
-                      <Typography variant="body1">{action.label}</Typography>
-                    </Paper>
-                  </motion.div>
-                ))}
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Container>
+      {/* Main Content */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          bgcolor: 'background.default',
+          minHeight: '100vh',
+          ml: `${drawerWidth}px`,
+        }}
+      >
+        <Toolbar />
+        <Suspense fallback={<LoadingScreen />}>
+          <Routes>
+            <Route path="/" element={<DashboardHome />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/dispatch" element={<Dispatch />} />
+            <Route path="/map" element={<MapView />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Suspense>
+      </Box>
     </Box>
   );
 };

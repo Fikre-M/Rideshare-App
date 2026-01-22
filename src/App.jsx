@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,6 +16,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { SnackbarProvider } from "notistack";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/common/LoadingScreen";
+import ChatBot, { ChatTrigger } from "./components/ai/ChatBot";
 
 // Lazy load components
 const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
@@ -70,6 +71,9 @@ const PublicRoute = ({ children }) => {
 };
 
 const AppContent = () => {
+  const [chatOpen, setChatOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -99,6 +103,15 @@ const AppContent = () => {
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>
+              
+              {/* AI ChatBot - Available on all pages */}
+              {isAuthenticated && (
+                <>
+                  <ChatTrigger onClick={() => setChatOpen(true)} />
+                  <ChatBot open={chatOpen} onClose={() => setChatOpen(false)} />
+                </>
+              )}
+              
               <ReactQueryDevtools initialIsOpen={false} />
             </AuthProvider>
           </QueryClientProvider>
