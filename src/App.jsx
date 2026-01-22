@@ -261,13 +261,9 @@ const AppRoutes = () => {
         </Routes>
       </Suspense>
       
-      {/* AI ChatBot - Available on all pages */}
-      {isAuthenticated && (
-        <>
-          <ChatTrigger onClick={() => setChatOpen(true)} />
-          <ChatBot open={chatOpen} onClose={() => setChatOpen(false)} />
-        </>
-      )}
+      {/* AI ChatBot - Available globally on all pages */}
+      <ChatTrigger onClick={() => setChatOpen(true)} />
+      <ChatBot open={chatOpen} onClose={() => setChatOpen(false)} />
       
       <ReactQueryDevtools 
         initialIsOpen={false} 
