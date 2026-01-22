@@ -21,19 +21,172 @@ import ChatBot, { ChatTrigger } from "./components/ai/ChatBot";
 // Lazy load components
 const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
 const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 
 const theme = createTheme({
   palette: {
-    primary: { main: "#1976d2" },
-    secondary: { main: "#dc004e" },
-    background: { default: "#f5f5f5" },
+    mode: 'light',
+    primary: { 
+      main: "#1976d2",
+      light: "#42a5f5",
+      dark: "#1565c0",
+      contrastText: "#ffffff"
+    },
+    secondary: { 
+      main: "#dc004e",
+      light: "#ff5983",
+      dark: "#9a0036",
+      contrastText: "#ffffff"
+    },
+    background: { 
+      default: "#f8fafc",
+      paper: "#ffffff"
+    },
+    text: {
+      primary: "#1a202c",
+      secondary: "#4a5568"
+    },
+    success: {
+      main: "#10b981",
+      light: "#34d399",
+      dark: "#059669"
+    },
+    warning: {
+      main: "#f59e0b",
+      light: "#fbbf24",
+      dark: "#d97706"
+    },
+    error: {
+      main: "#ef4444",
+      light: "#f87171",
+      dark: "#dc2626"
+    },
+    info: {
+      main: "#3b82f6",
+      light: "#60a5fa",
+      dark: "#2563eb"
+    }
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h1: { fontWeight: 700 },
-    h2: { fontWeight: 600 },
-    h3: { fontWeight: 600 },
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: { 
+      fontWeight: 800,
+      fontSize: '3.5rem',
+      lineHeight: 1.2,
+      letterSpacing: '-0.02em'
+    },
+    h2: { 
+      fontWeight: 700,
+      fontSize: '2.5rem',
+      lineHeight: 1.3,
+      letterSpacing: '-0.01em'
+    },
+    h3: { 
+      fontWeight: 600,
+      fontSize: '2rem',
+      lineHeight: 1.4
+    },
+    h4: {
+      fontWeight: 600,
+      fontSize: '1.5rem',
+      lineHeight: 1.4
+    },
+    h5: {
+      fontWeight: 600,
+      fontSize: '1.25rem',
+      lineHeight: 1.5
+    },
+    h6: {
+      fontWeight: 600,
+      fontSize: '1.125rem',
+      lineHeight: 1.5
+    },
+    body1: {
+      fontSize: '1rem',
+      lineHeight: 1.6
+    },
+    body2: {
+      fontSize: '0.875rem',
+      lineHeight: 1.6
+    },
+    button: {
+      textTransform: 'none',
+      fontWeight: 600
+    }
+  },
+  shape: {
+    borderRadius: 12
+  },
+  shadows: [
+    'none',
+    '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+    '0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)',
+    '0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)',
+    '0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)',
+    '0 25px 50px rgba(0, 0, 0, 0.15), 0 12px 18px rgba(0, 0, 0, 0.08)'
+  ],
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          textTransform: 'none',
+          fontWeight: 600,
+          padding: '10px 24px',
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            transform: 'translateY(-1px)',
+          },
+          transition: 'all 0.2s ease-in-out',
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)',
+          border: '1px solid rgba(0, 0, 0, 0.05)',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 12,
+          },
+        },
+      },
+    },
   },
 });
 
@@ -84,6 +237,14 @@ const AppRoutes = () => {
             element={
               <PublicRoute>
                 <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <Register />
               </PublicRoute>
             }
           />

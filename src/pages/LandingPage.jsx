@@ -88,7 +88,7 @@ const LandingPage = () => {
                 <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
                   <Button
                     component={Link}
-                    to={isAuthenticated ? '/dashboard' : '/login'}
+                    to={isAuthenticated ? '/dashboard' : '/register'}
                     variant="contained"
                     color="secondary"
                     size="large"
@@ -97,13 +97,22 @@ const LandingPage = () => {
                       py: 1.5,
                       fontSize: '1.1rem',
                       fontWeight: 600,
+                      borderRadius: 3,
+                      background: 'linear-gradient(135deg, #dc004e 0%, #ff6b9d 100%)',
+                      boxShadow: '0 8px 24px rgba(220, 0, 78, 0.3)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #b8003e 0%, #e55a8a 100%)',
+                        boxShadow: '0 12px 32px rgba(220, 0, 78, 0.4)',
+                        transform: 'translateY(-2px)',
+                      },
+                      transition: 'all 0.3s ease',
                     }}
                   >
-                    {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
+                    {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
                   </Button>
                   <Button
                     component={Link}
-                    to="/features"
+                    to="/login"
                     variant="outlined"
                     color="inherit"
                     size="large"
@@ -112,15 +121,18 @@ const LandingPage = () => {
                       py: 1.5,
                       fontSize: '1.1rem',
                       fontWeight: 600,
+                      borderRadius: 3,
                       borderColor: 'rgba(255, 255, 255, 0.3)',
                       color: 'white',
                       '&:hover': {
                         borderColor: 'white',
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        transform: 'translateY(-2px)',
                       },
+                      transition: 'all 0.3s ease',
                     }}
                   >
-                    Learn More
+                    Sign In
                   </Button>
                 </Box>
               </motion.div>

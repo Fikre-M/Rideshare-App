@@ -32,6 +32,7 @@ import {
   AccountCircle as AccountIcon,
   Logout as LogoutIcon,
   SmartToy as AIIcon,
+  DirectionsCar,
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +40,7 @@ import LoadingScreen from '../../components/common/LoadingScreen';
 
 // Lazy load pages
 const DashboardHome = lazy(() => import('../Dashboard'));
+const BookRide = lazy(() => import('../../components/booking/RideBooking'));
 const Analytics = lazy(() => import('../Analytics'));
 const Dispatch = lazy(() => import('../Dispatch'));
 const MapView = lazy(() => import('../MapView'));
@@ -65,6 +67,7 @@ const Dashboard = () => {
 
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+    { text: 'Book Ride', icon: <DirectionsCar />, path: '/dashboard/book' },
     { text: 'AI Analytics', icon: <AnalyticsIcon />, path: '/dashboard/analytics' },
     { text: 'AI Dispatch', icon: <DispatchIcon />, path: '/dashboard/dispatch' },
     { text: 'Map View', icon: <MapIcon />, path: '/dashboard/map' },
@@ -208,6 +211,7 @@ const Dashboard = () => {
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             <Route path="/" element={<DashboardHome />} />
+            <Route path="/book" element={<BookRide />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/dispatch" element={<Dispatch />} />
             <Route path="/map" element={<MapView />} />
