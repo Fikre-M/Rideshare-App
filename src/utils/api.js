@@ -31,7 +31,8 @@ api.interceptors.request.use(
     config.headers['X-Request-Timestamp'] = new Date().toISOString();
     
     // Log request in development
-    if (import.meta.env.DEV) {
+    // if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === "development") {
       console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`, {
         params: config.params,
         data: config.data,
@@ -41,8 +42,9 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    if (import.meta.env.DEV) {
-      console.error('[API] Request Error:', error);
+    // if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[API] Request Error:", error);
     }
     return Promise.reject(error);
   }
@@ -54,11 +56,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     // Log successful responses in development
-    if (import.meta.env.DEV) {
-      console.log(`[API] ${response.config.method?.toUpperCase()} ${response.config.url}`, {
-        status: response.status,
-        data: response.data,
-      });
+    // if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `[API] ${response.config.method?.toUpperCase()} ${response.config.url}`,
+        {
+          status: response.status,
+          data: response.data,
+        },
+      );
     }
     
     // Return only the data from the response
@@ -70,8 +76,9 @@ api.interceptors.response.use(
     const status = response?.status;
     
     // Log error in development
-    if (import.meta.env.DEV) {
-      console.error('[API] Response Error:', {
+    // if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[API] Response Error:", {
         url: config?.url,
         status,
         error: errorMessage,

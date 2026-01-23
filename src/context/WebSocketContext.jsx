@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useCallback, useMemo, useState } from 'react';
-import { useNotification } from "../../hooks/useNotification";
+import { useNotification } from "../hooks";
 import { useAuth } from './AuthContext';
 
 const MAX_RECONNECT_ATTEMPTS = 5;

@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { toast } from 'react-hot-toast';
+// import { toast } from 'react-hot-toast';
+import { useNotification } from "../hooks";
 
 const getEnvVariable = (key, defaultValue) => {
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
