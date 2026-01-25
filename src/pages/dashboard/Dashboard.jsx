@@ -39,6 +39,8 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import NotificationCenter from '../../components/notifications/NotificationCenter';
+import LocalTaxiIcon from "@mui/icons-material/LocalTaxi";
+
 
 // Lazy load pages
 const DashboardHome = lazy(() => import('../Dashboard'));
@@ -85,15 +87,15 @@ const Dashboard = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: "flex" }}>
       {/* App Bar */}
       <AppBar
         position="fixed"
         sx={{
           width: `calc(100% - ${drawerWidth}px)`,
           ml: `${drawerWidth}px`,
-          bgcolor: 'background.paper',
-          color: 'text.primary',
+          bgcolor: "background.paper",
+          color: "text.primary",
           boxShadow: 1,
         }}
       >
@@ -101,9 +103,10 @@ const Dashboard = () => {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             AI Rideshare Platform
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             <NotificationCenter />
-            <AIIcon sx={{ mr: 1, color: 'primary.main' }} />
+            {/* <AIIcon sx={{ mr: 1, color: 'primary.main' }} /> */}
+            <LocalTaxiIcon sx={{ color: "primary.main", mr: 2 }} />
             <Typography variant="body2" sx={{ mr: 2 }}>
               AI-Powered
             </Typography>
@@ -115,26 +118,30 @@ const Dashboard = () => {
               onClick={handleMenu}
               color="inherit"
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                {user?.name?.charAt(0) || 'U'}
+              <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main" }}>
+                {user?.name?.charAt(0) || "U"}
               </Avatar>
             </IconButton>
             <Menu
               id="menu-appbar"
               anchorEl={anchorEl}
               anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
+                vertical: "top",
+                horizontal: "right",
               }}
               keepMounted
               transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
+                vertical: "top",
+                horizontal: "right",
               }}
               open={Boolean(anchorEl)}
               onClose={handleClose}
             >
-              <MenuItem onClick={handleClose} component={Link} to="/dashboard/profile">
+              <MenuItem
+                onClick={handleClose}
+                component={Link}
+                to="/dashboard/profile"
+              >
                 <AccountIcon sx={{ mr: 1 }} />
                 Profile
               </MenuItem>
@@ -152,20 +159,29 @@ const Dashboard = () => {
         sx={{
           width: drawerWidth,
           flexShrink: 0,
-          '& .MuiDrawer-paper': {
+          "& .MuiDrawer-paper": {
             width: drawerWidth,
-            boxSizing: 'border-box',
-            bgcolor: 'background.paper',
-            borderRight: '1px solid',
-            borderColor: 'divider',
+            boxSizing: "border-box",
+            bgcolor: "background.paper",
+            borderRight: "1px solid",
+            borderColor: "divider",
           },
         }}
         variant="permanent"
         anchor="left"
       >
         <Toolbar>
-          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
-            <AIIcon sx={{ mr: 1, color: 'primary.main' }} />
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              width: "100%",
+              cursor: "pointer",
+            }}
+            onClick={() => navigate("/dashboard")}
+          >
+            {/* <AIIcon sx={{ mr: 1, color: "primary.main" }} /> */}
+            <LocalTaxiIcon sx={{ color: "primary.main", mr: 2 }} />
             <Typography variant="h6" noWrap>
               AI Rideshare
             </Typography>
@@ -180,21 +196,19 @@ const Dashboard = () => {
                 to={item.path}
                 selected={isActive(item.path)}
                 sx={{
-                  '&.Mui-selected': {
-                    bgcolor: 'primary.main',
-                    color: 'primary.contrastText',
-                    '&:hover': {
-                      bgcolor: 'primary.dark',
+                  "&.Mui-selected": {
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    "&:hover": {
+                      bgcolor: "primary.dark",
                     },
-                    '& .MuiListItemIcon-root': {
-                      color: 'primary.contrastText',
+                    "& .MuiListItemIcon-root": {
+                      color: "primary.contrastText",
                     },
                   },
                 }}
               >
-                <ListItemIcon>
-                  {item.icon}
-                </ListItemIcon>
+                <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
               </ListItemButton>
             </ListItem>
@@ -207,8 +221,8 @@ const Dashboard = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          bgcolor: 'background.default',
-          minHeight: '100vh',
+          bgcolor: "background.default",
+          minHeight: "100vh",
           ml: `${drawerWidth}px`,
         }}
       >
