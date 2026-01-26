@@ -28,6 +28,8 @@ import {
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 import { motion } from "framer-motion";
+import LocalTaxiIcon from "@mui/icons-material/LocalTaxi";
+
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -155,9 +157,10 @@ const Login = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <Box sx={{ color: 'white', mb: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                  <AIIcon sx={{ fontSize: 48, mr: 2 }} />
+              <Box sx={{ color: "white", mb: 4 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                  {/* <AIIcon sx={{ fontSize: 48, mr: 2 }} /> */}
+                  <LocalTaxiIcon sx={{ color: "natural.main", mr: 2 }} />
                   <Typography variant="h3" fontWeight="bold">
                     AI Rideshare
                   </Typography>
@@ -165,22 +168,31 @@ const Login = () => {
                 <Typography variant="h5" sx={{ mb: 3, opacity: 0.9 }}>
                   The Future of Transportation
                 </Typography>
-                <Typography variant="body1" sx={{ mb: 4, opacity: 0.8, lineHeight: 1.6 }}>
-                  Experience intelligent ride matching, dynamic pricing, and predictive analytics 
-                  powered by cutting-edge artificial intelligence. Join thousands of users who 
-                  trust our platform for their daily transportation needs.
+                <Typography
+                  variant="body1"
+                  sx={{ mb: 4, opacity: 0.8, lineHeight: 1.6 }}
+                >
+                  Experience intelligent ride matching, dynamic pricing, and
+                  predictive analytics powered by cutting-edge artificial
+                  intelligence. Join thousands of users who trust our platform
+                  for their daily transportation needs.
                 </Typography>
-                
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                  {['🤖 AI Matching', '💰 Smart Pricing', '🗺️ Route Optimization', '📊 Predictive Analytics'].map((feature, index) => (
+
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                  {[
+                    "🤖 AI Matching",
+                    "💰 Smart Pricing",
+                    "🗺️ Route Optimization",
+                    "📊 Predictive Analytics",
+                  ].map((feature, index) => (
                     <Box
                       key={index}
                       sx={{
-                        backgroundColor: 'rgba(255,255,255,0.1)',
-                        backdropFilter: 'blur(10px)',
-                        padding: '8px 16px',
-                        borderRadius: '20px',
-                        border: '1px solid rgba(255,255,255,0.2)',
+                        backgroundColor: "rgba(255,255,255,0.1)",
+                        backdropFilter: "blur(10px)",
+                        padding: "8px 16px",
+                        borderRadius: "20px",
+                        border: "1px solid rgba(255,255,255,0.2)",
                       }}
                     >
                       <Typography variant="body2">{feature}</Typography>
@@ -202,14 +214,14 @@ const Login = () => {
                 <Box textAlign="center" mb={4}>
                   <Avatar
                     sx={{
-                      bgcolor: 'primary.main',
+                      bgcolor: "primary.main",
                       width: 64,
                       height: 64,
-                      mx: 'auto',
+                      mx: "auto",
                       mb: 2,
                     }}
                   >
-                    <LoginIcon sx={{ fontSize: 32 }} />
+                    {/* <LoginIcon sx={{ fontSize: 32 }} /> */}
                   </Avatar>
                   <Typography variant="h4" gutterBottom fontWeight="bold">
                     Welcome Back
@@ -234,9 +246,9 @@ const Login = () => {
                     onChange={handleInputChange("email")}
                     variant="outlined"
                     required
-                    sx={{ 
+                    sx={{
                       mb: 3,
-                      '& .MuiOutlinedInput-root': { borderRadius: 2 }
+                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
                     }}
                   />
 
@@ -260,13 +272,20 @@ const Login = () => {
                         </InputAdornment>
                       ),
                     }}
-                    sx={{ 
+                    sx={{
                       mb: 3,
-                      '& .MuiOutlinedInput-root': { borderRadius: 2 }
+                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
                     }}
                   />
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 3,
+                    }}
+                  >
                     <FormControlLabel
                       control={
                         <Checkbox
@@ -349,8 +368,12 @@ const Login = () => {
                 <Grid container spacing={2}>
                   {demoAccounts.map((account, index) => (
                     <Grid item xs={12} key={index}>
-                      <DemoCard onClick={() => handleDemoLogin(account.email, account.password)}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <DemoCard
+                        onClick={() =>
+                          handleDemoLogin(account.email, account.password)
+                        }
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
                           <Avatar
                             sx={{
                               bgcolor: `${account.color}.main`,
@@ -365,7 +388,10 @@ const Login = () => {
                             <Typography variant="subtitle2" fontWeight="bold">
                               {account.name}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               {account.role} • Click to login
                             </Typography>
                           </Box>
