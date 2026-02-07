@@ -1,47 +1,32 @@
 import { useState, useEffect } from 'react';
 import {
   Box,
-  Paper,
   Typography,
+  Paper,
   Button,
-  TextField,
-  Chip,
   Grid,
-  Card,
-  CardContent,
-  LinearProgress,
+  TextField,
+  MenuItem,
+  CircularProgress,
   Alert,
-  Switch,
+  Chip,
+  Divider,
   FormControlLabel,
+  Switch,
+  LinearProgress,
 } from '@mui/material';
 import {
+  AddLocation as PickupIcon,
+  LocationOn as DestinationIcon,
+  SwapHoriz as SwapIcon,
   Route as RouteIcon,
-  Speed as SpeedIcon,
-  LocalGasStation as FuelIcon,
   Traffic as TrafficIcon,
   TrendingUp as OptimizeIcon,
 } from '@mui/icons-material';
-import { styled } from '@mui/material/styles';
 import { motion } from 'framer-motion';
+import OpenStreetMap from '../map/OpenStreetMap';
+import RouteDisplay from '../map/RouteDisplay';
 import aiService from '../../services/aiService';
-
-const RouteCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  transition: 'transform 0.2s, box-shadow 0.2s',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: theme.shadows[4],
-  },
-}));
-
-const MetricBox = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  padding: theme.spacing(1),
-  backgroundColor: theme.palette.background.default,
-  borderRadius: theme.shape.borderRadius,
-  marginBottom: theme.spacing(1),
-}));
 
 const RouteOptimizer = () => {
   const [waypoints, setWaypoints] = useState(['', '']);
@@ -234,92 +219,35 @@ const RouteOptimizer = () => {
                   Optimized Route Results
                 </Typography>
 
+                {/* Route Metrics */}
                 <Grid container spacing={2} sx={{ mb: 3 }}>
                   <Grid item xs={6}>
-                    <MetricBox>
+                    <Box sx={{ display: 'flex', alignItems: 'center', p: 1, backgroundColor: 'background.default', borderRadius: 1 }}>
                       <SpeedIcon sx={{ mr: 1, color: 'primary.main' }} />
                       <Box>
                         <Typography variant="body2" color="text.secondary">
                           Est. Time
                         </Typography>
                         <Typography variant="h6">
-                          {optimization.estimatedTime} min
+                          {optimization.optimizedRoute.estimatedTime} min
                         </Typography>
                       </Box>
-                    </MetricBox>
+                    </Box>
                   </Grid>
                   
                   <Grid item xs={6}>
-                    <MetricBox>
+                    <Box sx={{ display: 'flex', alignItems: 'center', p: 1, backgroundColor: 'background.default', borderRadius: 1 }}>
                       <RouteIcon sx={{ mr: 1, color: 'success.main' }} />
                       <Box>
                         <Typography variant="body2" color="text.secondary">
                           Distance
                         </Typography>
                         <Typography variant="h6">
-                          {optimization.estimatedDistance} km
+                          {optimization.optimizedRoute.estimatedDistance} km
                         </Typography>
-                      </Box>
-                    </MetricBox>
-                  </Grid>
-
-                  <Grid item xs={6}>
-                    <MetricBox>
-                      <FuelIcon sx={{ mr: 1, color: 'warning.main' }} />
-                      <Box>
-                        <Typography variant="body2" color="text.secondary">
-                          Fuel Efficiency
-                        </Typography>
-                        <Typography variant="h6">
-                          {optimization.fuelEfficiency}
-                        </Typography>
-                      </Box>
-                    </MetricBox>
-                  </Grid>
-
-                  <Grid item xs={6}>
-                    <MetricBox>
-                      <TrafficIcon sx={{ mr: 1, color: 'info.main' }} />
-                      <Box>
-                        <Typography variant="body2" color="text.secondary">
-                          Traffic
-                        </Typography>
-                        <Typography variant="h6">
-                          {optimization.trafficConditions}
-                        </Typography>
-                      </Box>
-                    </MetricBox>
-                  </Grid>
-                </Grid>
-
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Route Waypoints
-                  </Typography>
-                  {optimization.optimizedRoute.map((point, index) => (
-                    <Chip
-                      key={index}
-                      label={`${index + 1}. ${point}`}
-                      variant="outlined"
-                      size="small"
-                      sx={{ mr: 0.5, mb: 0.5 }}
-                    />
-                  ))}
-                </Box>
-
-                {optimization.alternativeRoutes > 0 && (
-                  <Alert severity="info">
-                    {optimization.alternativeRoutes} alternative routes available. 
-                    This route is optimized based on your preferences.
-                  </Alert>
-                )}
-              </Paper>
-            </motion.div>
-          )}
-        </Grid>
       </Grid>
-    </Box>
-  );
-};
+    </Grid>
+  </Box>
+);
 
 export default RouteOptimizer;
