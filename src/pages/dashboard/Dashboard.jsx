@@ -147,83 +147,6 @@ const Dashboard = () => {
 
   return (
     <Box sx={{ display: "flex" }}>
-      {/* App Bar */}
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          ml: { md: `${drawerWidth}px` },
-          bgcolor: "background.paper",
-          color: "text.primary",
-          boxShadow: 1,
-        }}
-      >
-        <Toolbar>
-          {isMobile && (
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 2 }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            AI Rideshare Platform
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <NotificationCenter />
-            {/* <AIIcon sx={{ mr: 1, color: 'primary.main' }} /> */}
-            <LocalTaxiIcon sx={{ color: "primary.main", mr: 2 }} />
-            <Typography variant="body2" sx={{ mr: 2 }}>
-              AI-Powered
-            </Typography>
-            <IconButton
-              size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleMenu}
-              color="inherit"
-            >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main" }}>
-                {user?.name?.charAt(0) || "U"}
-              </Avatar>
-            </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorEl}
-              anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-            >
-              <MenuItem
-                onClick={handleClose}
-                component={Link}
-                to="/dashboard/profile"
-              >
-                <AccountIcon sx={{ mr: 1 }} />
-                Profile
-              </MenuItem>
-              <MenuItem onClick={handleLogout}>
-                <LogoutIcon sx={{ mr: 1 }} />
-                Logout
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
-
       {/* Sidebar */}
       <Box
         component="nav"
@@ -262,6 +185,7 @@ const Dashboard = () => {
               bgcolor: "background.paper",
               borderRight: "1px solid",
               borderColor: "divider",
+              position: 'relative',
             },
           }}
           open
@@ -277,22 +201,101 @@ const Dashboard = () => {
           flexGrow: 1,
           bgcolor: "background.default",
           minHeight: "100vh",
-          ml: { md: `${drawerWidth}px` },
-          width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` },
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <Toolbar />
-        <Suspense fallback={<LoadingScreen />}>
-          <Routes>
-            <Route path="/" element={<DashboardHome />} />
-            <Route path="/book" element={<BookRide />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/dispatch" element={<Dispatch />} />
-            <Route path="/map" element={<MapView />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Suspense>
+        {/* App Bar */}
+        <AppBar
+          position="sticky"
+          sx={{
+            width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` },
+            bgcolor: "background.paper",
+            color: "text.primary",
+            boxShadow: 1,
+            zIndex: theme.zIndex.appBar - 1,
+          }}
+        >
+          <Toolbar>
+            {isMobile && (
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+                sx={{ mr: 2 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+            <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+              AI Rideshare Platform
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <NotificationCenter />
+              {/* <AIIcon sx={{ mr: 1, color: 'primary.main' }} /> */}
+              <LocalTaxiIcon sx={{ color: "primary.main", mr: 2 }} />
+              <Typography variant="body2" sx={{ mr: 2 }}>
+                AI-Powered
+              </Typography>
+              <IconButton
+                size="large"
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                onClick={handleMenu}
+                color="inherit"
+              >
+                <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main" }}>
+                  {user?.name?.charAt(0) || "U"}
+                </Avatar>
+              </IconButton>
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+              >
+                <MenuItem
+                  onClick={handleClose}
+                  component={Link}
+                  to="/dashboard/profile"
+                >
+                  <AccountIcon sx={{ mr: 1 }} />
+                  Profile
+                </MenuItem>
+                <MenuItem onClick={handleLogout}>
+                  <LogoutIcon sx={{ mr: 1 }} />
+                  Logout
+                </MenuItem>
+              </Menu>
+            </Box>
+          </Toolbar>
+        </AppBar>
+
+        {/* Page Content */}
+        <Box sx={{ flexGrow: 1, p: 0 }}>
+          <Suspense fallback={<LoadingScreen />}>
+            <Routes>
+              <Route path="/" element={<DashboardHome />} />
+              <Route path="/book" element={<BookRide />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/dispatch" element={<Dispatch />} />
+              <Route path="/map" element={<MapView />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </Suspense>
+        </Box>
       </Box>
     </Box>
   );
