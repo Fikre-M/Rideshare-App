@@ -93,6 +93,14 @@ export const AuthProvider = ({ children }) => {
           const userData = JSON.parse(storedUser);
           // Check if token is expired
           if (userData.exp && userData.exp * 1000 > Date.now()) {
+            // Check for custom profile image
+            const imageKey = `${USER_IMAGES_KEY}_${userData.id}`;
+            const customImage = getImageFromLocalStorage(imageKey);
+            
+            if (customImage) {
+              userData.avatar = customImage;
+            }
+            
             setUser(userData);
             setToken(storedToken);
           } else {
@@ -246,6 +254,10 @@ export const AuthProvider = ({ children }) => {
         throw new Error('User not authenticated');
       }
 
+      if (!imageFile) {
+        throw new Error('No file provided');
+      }
+
       // Validate image
       const validation = validateImageFile(imageFile, {
         maxSize: 5 * 1024 * 1024, // 5MB
@@ -256,9 +268,8 @@ export const AuthProvider = ({ children }) => {
         throw new Error(validation.errors.join(', '));
       }
 
-      // Convert to base64 and compress
-      const base64Image = await fileToBase64(imageFile);
-      const compressedImage = await compressImage(base64Image, {
+      // Compress the image first (pass the original file)
+      const compressedImage = await compressImage(imageFile, {
         maxSizeKB: 500, // Target 500KB
         quality: 0.8,
       });

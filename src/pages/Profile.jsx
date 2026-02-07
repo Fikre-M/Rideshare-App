@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -85,8 +85,24 @@ const Profile = () => {
     },
   });
 
+  // Update profile data when user changes
+  useEffect(() => {
+    if (user) {
+      setProfileData(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+      }));
+    }
+  }, [user]);
+
   // Handle image upload
   const handleImageUpload = async (base64Image, file) => {
+    if (!file) {
+      console.error('No file provided to handleImageUpload');
+      return;
+    }
+    
     try {
       setIsUploadingImage(true);
       await uploadProfileImage(file);
@@ -94,6 +110,23 @@ const Profile = () => {
       console.error('Image upload failed:', error);
     } finally {
       setIsUploadingImage(false);
+    }
+  };
+
+  // Handle file input change (for the separate file input)
+  const handleFileInputChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        setIsUploadingImage(true);
+        await uploadProfileImage(file);
+        // Reset the file input
+        event.target.value = '';
+      } catch (error) {
+        console.error('Image upload failed:', error);
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 
@@ -306,7 +339,7 @@ const Profile = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <AchievementBadge earned={achievement.earned}>
+                    <AchievementBadge earned={achievement.earned ? "true" : "false"}>
                       <Typography variant="h3" sx={{ mb: 1 }}>
                         {achievement.icon}
                       </Typography>
@@ -397,12 +430,7 @@ const Profile = () => {
                   type="file"
                   accept="image/*"
                   style={{ display: 'none' }}
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      handleImageUpload(null, file);
-                    }
-                  }}
+                  onChange={handleFileInputChange}
                 />
               </Grid>
               <Grid item xs={12} md={8}>

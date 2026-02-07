@@ -78,10 +78,12 @@ const ImageUpload = ({
     setIsUploading(true);
 
     try {
+      // Only convert to base64 if we need to show preview
+      // Let the parent handle the actual upload
       const base64Image = await fileToBase64(file);
       setPreviewImage(base64Image);
       
-      // Notify parent component
+      // Notify parent component with both base64 and original file
       if (onImageChange) {
         await onImageChange(base64Image, file);
       }
