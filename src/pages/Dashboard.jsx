@@ -119,15 +119,15 @@ const Dashboard = () => {
       </Box>
 
       {/* KPI Cards */}
-      <Box mb={4}>
+      <Box mb={2}>
         <SectionTitle variant="h6">Key Performance Indicators</SectionTitle>
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+          <Grid container spacing={1}>
+            <Grid item xs={12} sm={12} md={3}>
               <motion.div variants={itemVariants}>
                 <KPICard
                   title="Total Vehicles"
@@ -138,7 +138,7 @@ const Dashboard = () => {
                 />
               </motion.div>
             </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+            <Grid item xs={12} sm={12} md={3}>
               <motion.div variants={itemVariants}>
                 <KPICard
                   title="Active Drivers"
@@ -149,7 +149,7 @@ const Dashboard = () => {
                 />
               </motion.div>
             </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+            <Grid item xs={12} sm={12} md={3}>
               <motion.div variants={itemVariants}>
                 <KPICard
                   title="Trips Today"
@@ -160,7 +160,7 @@ const Dashboard = () => {
                 />
               </motion.div>
             </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+            <Grid item xs={12} sm={12} md={3}>
               <motion.div variants={itemVariants}>
                 <KPICard
                   title="Avg. Wait Time"
@@ -171,7 +171,7 @@ const Dashboard = () => {
                 />
               </motion.div>
             </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+            <Grid item xs={12} sm={12} md={3}>
               <motion.div variants={itemVariants}>
                 <KPICard
                   title="Occupancy Rate"
@@ -188,7 +188,7 @@ const Dashboard = () => {
 
       {/* Map and Events Row */}
       <Grid container spacing={3}>
-        <Grid item xs={12} lg={8}>
+        <Grid item xs={12} md={8} lg={7}>
           <SectionTitle variant="h6">Live Vehicle Tracking</SectionTitle>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -197,18 +197,18 @@ const Dashboard = () => {
           >
             <Paper
               sx={{
-                height: 500,
+                height: { xs: 400, md: 500 },
                 borderRadius: 2,
                 overflow: 'hidden',
                 boxShadow: theme.shadows[3],
               }}
             >
-              <RealTimeMap height={500} />
+              <RealTimeMap height={400} />
             </Paper>
           </motion.div>
         </Grid>
 
-        <Grid item xs={12} lg={4}>
+        <Grid item xs={12} md={4} lg={5}>
           <SectionTitle variant="h6">Recent Events</SectionTitle>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -217,7 +217,7 @@ const Dashboard = () => {
           >
             <Paper
               sx={{
-                height: 500,
+                height: { xs: 400, md: 500 },
                 borderRadius: 2,
                 overflow: 'hidden',
                 boxShadow: theme.shadows[3],

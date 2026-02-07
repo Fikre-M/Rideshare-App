@@ -37,6 +37,7 @@ import {
   SmartToy as AIIcon,
   DirectionsCar,
   Menu as MenuIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -169,9 +170,30 @@ const Dashboard = () => {
               borderRight: "1px solid",
               borderColor: "divider",
             },
+            '& .MuiBackdrop-root': {
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            },
           }}
         >
-          {drawer}
+          <Box sx={{ position: 'relative', height: '100%' }}>
+            {/* Close button */}
+            <IconButton
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 1,
+                bgcolor: 'rgba(255, 255, 255, 0.8)',
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 255, 1)',
+                },
+              }}
+              onClick={handleDrawerToggle}
+            >
+              <CloseIcon />
+            </IconButton>
+            {drawer}
+          </Box>
         </Drawer>
 
         {/* Desktop drawer */}
@@ -203,6 +225,8 @@ const Dashboard = () => {
           minHeight: "100vh",
           display: 'flex',
           flexDirection: 'column',
+          ml: { xs: 0, md: `${drawerWidth}px` },
+          width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` },
         }}
       >
         {/* App Bar */}

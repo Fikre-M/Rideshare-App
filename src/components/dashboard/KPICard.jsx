@@ -6,8 +6,9 @@ import { styled } from '@mui/material/styles';
 const StatCard = styled(Box)(({ theme, color = 'primary' }) => ({
   backgroundColor: theme.palette.background.paper,
   borderRadius: theme.shape.borderRadius,
-  padding: theme.spacing(3),
+  padding: theme.spacing(1.5),
   height: '100%',
+  minHeight: 100,
   boxShadow: theme.shadows[2],
   transition: 'transform 0.3s, box-shadow 0.3s',
   '&:hover': {
@@ -15,6 +16,14 @@ const StatCard = styled(Box)(({ theme, color = 'primary' }) => ({
     boxShadow: theme.shadows[4],
   },
   borderLeft: `4px solid ${theme.palette[color].main}`,
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(1),
+    minHeight: 90,
+  },
+  [theme.breakpoints.down('xs')]: {
+    padding: theme.spacing(0.75),
+    minHeight: 80,
+  },
 }));
 
 const KPICard = ({ title, value, change, loading = false, color = 'primary' }) => {
@@ -29,11 +38,27 @@ const KPICard = ({ title, value, change, loading = false, color = 'primary' }) =
         </>
       ) : (
         <>
-          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+          <Typography 
+            variant="subtitle2" 
+            color="text.secondary" 
+            gutterBottom
+            sx={{
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              lineHeight: 1.2,
+            }}
+          >
             {title}
           </Typography>
           <Box display="flex" alignItems="flex-end" gap={1}>
-            <Typography variant="h4" component="div" fontWeight="bold">
+            <Typography 
+              variant="h4" 
+              component="div" 
+              fontWeight="bold"
+              sx={{
+                fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                lineHeight: 1.1,
+              }}
+            >
               {typeof value === 'number' ? value.toLocaleString() : value}
             </Typography>
             {change !== undefined && (
