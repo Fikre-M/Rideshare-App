@@ -109,6 +109,7 @@ const RideBooking = () => {
   const [pricing, setPricing] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [bookingConfirmed, setBookingConfirmed] = useState(false);
 
   const handleInputChange = (field) => (event) => {
     setBookingData({ ...bookingData, [field]: event.target.value });
@@ -170,21 +171,24 @@ const RideBooking = () => {
       // Simulate booking process
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // In a real app, this would create the booking
-      alert('Ride booked successfully! Your driver will arrive in ' + selectedVehicle.eta);
+      // Set booking confirmed state
+      setBookingConfirmed(true);
       
-      // Reset form
-      setActiveStep(0);
-      setBookingData({
-        pickup: '',
-        destination: '',
-        vehicleType: '',
-        scheduledTime: '',
-        passengers: 1,
-      });
-      setSelectedVehicle(null);
-      setMatchedDriver(null);
-      setPricing(null);
+      // Reset form after delay
+      setTimeout(() => {
+        setActiveStep(0);
+        setBookingData({
+          pickup: '',
+          destination: '',
+          vehicleType: '',
+          scheduledTime: '',
+          passengers: 1,
+        });
+        setSelectedVehicle(null);
+        setMatchedDriver(null);
+        setPricing(null);
+        setBookingConfirmed(false);
+      }, 3000);
     } catch (err) {
       setError('Failed to book ride. Please try again.');
     } finally {
@@ -408,11 +412,11 @@ const RideBooking = () => {
               <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <LocationIcon sx={{ color: 'success.main', mr: 1 }} />
-                  <Typography variant="body2">{bookingData.pickup}</Typography>
+                  <Typography variant="body2">{bookingData.pickup || 'Bronx, NY'}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <LocationIcon sx={{ color: 'error.main', mr: 1 }} />
-                  <Typography variant="body2">{bookingData.destination}</Typography>
+                  <Typography variant="body2">{bookingData.destination || 'Brooklyn, NY'}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <PersonIcon sx={{ color: 'text.secondary', mr: 1 }} />
@@ -452,6 +456,59 @@ const RideBooking = () => {
                 </>
               )}
             </Paper>
+
+            {bookingConfirmed && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                style={{ 
+                  position: 'fixed',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 9999
+                }}
+              >
+                <Paper sx={{ 
+                  p: 4, 
+                  minWidth: 350,
+                  background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+                  color: 'white',
+                  textAlign: 'center',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+                }}>
+                  <Typography variant="h4" gutterBottom fontWeight="bold">
+                    🎉 Booking Confirmed!
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    Your driver {matchedDriver?.name} will arrive in {selectedVehicle?.eta}
+                  </Typography>
+                  <Typography variant="body2">
+                    Booking ID: #{Math.floor(Math.random() * 1000000)}
+                  </Typography>
+                  <Typography variant="caption" sx={{ mt: 1 }}>
+                    You can track your ride in the Map View
+                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Button
+                      variant="outlined"
+                      onClick={() => setBookingConfirmed(false)}
+                      sx={{ 
+                        borderColor: 'white',
+                        color: 'white',
+                        '&:hover': {
+                          borderColor: 'white',
+                          backgroundColor: 'rgba(255,255,255,0.1)'
+                        }
+                      }}
+                    >
+                      Close
+                    </Button>
+                  </Box>
+                </Paper>
+              </motion.div>
+            )}
           </Box>
         );
 
