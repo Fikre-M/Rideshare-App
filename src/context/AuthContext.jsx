@@ -9,9 +9,18 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import jwtDecode from "jwt-decode";
+import { 
+  validateImageFile, 
+  fileToBase64, 
+  compressImage, 
+  storeImageInLocalStorage,
+  getImageFromLocalStorage,
+  isValidBase64Image 
+} from "../utils/imageUtils";
 
 const TOKEN_KEY = "ai_rideshare_auth_token";
 const USERS_KEY = "ai_rideshare_users";
+const USER_IMAGES_KEY = "ai_rideshare_user_images";
 
 const AuthContext = createContext(null);
 
@@ -230,6 +239,125 @@ export const AuthProvider = ({ children }) => {
     toast.success('Successfully logged out');
   }, [navigate]);
 
+  // Upload user profile image
+  const uploadProfileImage = useCallback(async (imageFile) => {
+    try {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Validate image
+      const validation = validateImageFile(imageFile, {
+        maxSize: 5 * 1024 * 1024, // 5MB
+        allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+      });
+
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(', '));
+      }
+
+      // Convert to base64 and compress
+      const base64Image = await fileToBase64(imageFile);
+      const compressedImage = await compressImage(base64Image, {
+        maxSizeKB: 500, // Target 500KB
+        quality: 0.8,
+      });
+
+      // Store image in localStorage
+      const imageKey = `${USER_IMAGES_KEY}_${user.id}`;
+      const stored = storeImageInLocalStorage(imageKey, compressedImage);
+
+      if (!stored) {
+        throw new Error('Failed to store image. Image may be too large.');
+      }
+
+      // Update user data with new avatar
+      const updatedUser = {
+        ...user,
+        avatar: compressedImage,
+      };
+
+      // Update user in localStorage
+      const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+      const userIndex = users.findIndex(u => u.id === user.id);
+      
+      if (userIndex !== -1) {
+        users[userIndex].avatar = compressedImage;
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      }
+
+      // Update current user state
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      toast.success('Profile image updated successfully!');
+      return compressedImage;
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      toast.error(error.message || 'Failed to upload profile image');
+      throw error;
+    }
+  }, [user]);
+
+  // Remove user profile image
+  const removeProfileImage = useCallback(async () => {
+    try {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Remove image from localStorage
+      const imageKey = `${USER_IMAGES_KEY}_${user.id}`;
+      localStorage.removeItem(imageKey);
+
+      // Set default avatar
+      const defaultAvatar = `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000000)}?w=150&h=150&fit=crop&crop=face`;
+
+      // Update user data
+      const updatedUser = {
+        ...user,
+        avatar: defaultAvatar,
+      };
+
+      // Update user in localStorage
+      const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+      const userIndex = users.findIndex(u => u.id === user.id);
+      
+      if (userIndex !== -1) {
+        users[userIndex].avatar = defaultAvatar;
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      }
+
+      // Update current user state
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      toast.success('Profile image removed successfully!');
+      return defaultAvatar;
+    } catch (error) {
+      console.error('Error removing profile image:', error);
+      toast.error(error.message || 'Failed to remove profile image');
+      throw error;
+    }
+  }, [user]);
+
+  // Get user image from storage
+  const getUserImage = useCallback((userId) => {
+    if (!userId) return null;
+    
+    const imageKey = `${USER_IMAGES_KEY}_${userId}`;
+    const image = getImageFromLocalStorage(imageKey);
+    
+    if (image) {
+      return image;
+    }
+
+    // Fallback to user data
+    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    const userData = users.find(u => u.id === userId);
+    return userData?.avatar || null;
+  }, []);
+
   // Check if user is authenticated based on token and expiration
   const isAuthenticated = useMemo(() => {
     if (!user || !token) return false;
@@ -252,6 +380,9 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    uploadProfileImage,
+    removeProfileImage,
+    getUserImage,
     hasRole: (requiredRoles) => {
       if (!user?.roles) return false;
       return requiredRoles.some(role => user.roles.includes(role));

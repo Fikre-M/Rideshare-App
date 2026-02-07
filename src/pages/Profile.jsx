@@ -19,6 +19,7 @@ import {
   ListItemIcon,
   ListItemText,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -36,6 +37,7 @@ import {
 import { styled } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import ImageUpload from '../components/common/ImageUpload';
 
 const ProfileCard = styled(Card)(({ theme }) => ({
   borderRadius: 20,
@@ -67,8 +69,9 @@ const AchievementBadge = styled(Box)(({ theme, earned }) => ({
 }));
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, uploadProfileImage, removeProfileImage } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -81,6 +84,30 @@ const Profile = () => {
       ecoMode: false,
     },
   });
+
+  // Handle image upload
+  const handleImageUpload = async (base64Image, file) => {
+    try {
+      setIsUploadingImage(true);
+      await uploadProfileImage(file);
+    } catch (error) {
+      console.error('Image upload failed:', error);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // Handle image removal
+  const handleImageRemove = async () => {
+    try {
+      setIsUploadingImage(true);
+      await removeProfileImage();
+    } catch (error) {
+      console.error('Image removal failed:', error);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   const handleInputChange = (field) => (event) => {
     setProfileData({
@@ -145,17 +172,36 @@ const Profile = () => {
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar
-                      src={user?.avatar}
-                      sx={{
-                        width: 100,
-                        height: 100,
-                        mr: 3,
-                        border: '4px solid rgba(255,255,255,0.2)',
-                      }}
-                    >
-                      {user?.name?.charAt(0)}
-                    </Avatar>
+                    <Box sx={{ position: 'relative', mr: 3 }}>
+                      <ImageUpload
+                        currentImage={user?.avatar}
+                        onImageChange={handleImageUpload}
+                        onImageRemove={handleImageRemove}
+                        size={100}
+                        disabled={isUploadingImage}
+                        showPreview={true}
+                        accept="image/*"
+                        maxSize={5 * 1024 * 1024}
+                      />
+                      {isUploadingImage && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            borderRadius: '50%',
+                          }}
+                        >
+                          <CircularProgress size={24} sx={{ color: 'white' }} />
+                        </Box>
+                      )}
+                    </Box>
                     <Box>
                       {isEditing ? (
                         <TextField
@@ -309,6 +355,71 @@ const Profile = () => {
                 </ListItem>
               ))}
             </List>
+          </Paper>
+        </Grid>
+
+        {/* Profile Image Management */}
+        <Grid item xs={12}>
+          <Typography variant="h6" gutterBottom fontWeight="bold">
+            Profile Picture
+          </Typography>
+          <Paper sx={{ p: 3, borderRadius: 3 }}>
+            <Grid container spacing={3} alignItems="center">
+              <Grid item xs={12} md={4}>
+                <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+                  Update Your Photo
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Upload a new profile picture or remove your current one. Supported formats: JPEG, PNG, GIF, WebP. Maximum file size: 5MB.
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={() => document.getElementById('profile-image-input').click()}
+                    disabled={isUploadingImage}
+                    startIcon={<EditIcon />}
+                  >
+                    {isUploadingImage ? 'Uploading...' : 'Change Photo'}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={handleImageRemove}
+                    disabled={isUploadingImage || !user?.avatar}
+                    startIcon={<CancelIcon />}
+                  >
+                    Remove Photo
+                  </Button>
+                </Box>
+                <input
+                  id="profile-image-input"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      handleImageUpload(null, file);
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={8}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <ImageUpload
+                    currentImage={user?.avatar}
+                    onImageChange={handleImageUpload}
+                    onImageRemove={handleImageRemove}
+                    size={150}
+                    disabled={isUploadingImage}
+                    showPreview={true}
+                    accept="image/*"
+                    maxSize={5 * 1024 * 1024}
+                  />
+                </Box>
+              </Grid>
+            </Grid>
           </Paper>
         </Grid>
 
