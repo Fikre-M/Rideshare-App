@@ -16,6 +16,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/common/LoadingScreen";
+import ScrollToTop from "./components/common/ScrollToTop";
 import ChatBot, { ChatTrigger } from "./components/ai/ChatBot";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import config from "./config/config";
@@ -220,6 +221,7 @@ const AppRoutes = () => {
 
   return (
     <>
+      <ScrollToTop />
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/" element={<LandingPage />} />

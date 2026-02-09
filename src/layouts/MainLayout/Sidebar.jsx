@@ -24,6 +24,8 @@ import {
   Timeline as AnalyticsIcon,
   Notifications as AlertsIcon,
   Settings as SettingsIcon,
+  DirectionsCar,
+  LocalShipping as DispatchIcon,
   ExpandLess,
   ExpandMore,
   ChevronLeft,
@@ -78,39 +80,24 @@ const menuItems = [
     path: '/dashboard',
   },
   { 
-    text: 'Live Map', 
-    icon: <MapIcon />, 
-    path: '/map',
+    text: 'Book Ride', 
+    icon: <DirectionsCar />, 
+    path: '/dashboard/book',
   },
   { 
-    text: 'Fleet', 
-    icon: <FleetIcon />, 
-    path: '/fleet',
-    items: [
-      { text: 'Vehicles', path: '/fleet/vehicles' },
-      { text: 'Maintenance', path: '/fleet/maintenance' },
-      { text: 'Fuel', path: '/fleet/fuel' },
-    ]
-  },
-  { 
-    text: 'Drivers', 
-    icon: <DriversIcon />, 
-    path: '/drivers',
-  },
-  { 
-    text: 'Analytics', 
+    text: 'AI Analytics', 
     icon: <AnalyticsIcon />, 
-    path: '/analytics',
+    path: '/dashboard/analytics',
   },
   { 
-    text: 'Alerts', 
-    icon: <AlertsIcon />, 
-    path: '/alerts',
+    text: 'AI Dispatch', 
+    icon: <DispatchIcon />, 
+    path: '/dashboard/dispatch',
   },
   { 
-    text: 'Settings', 
-    icon: <SettingsIcon />, 
-    path: '/settings',
+    text: 'Map View', 
+    icon: <MapIcon />, 
+    path: '/dashboard/map',
   },
 ];
 

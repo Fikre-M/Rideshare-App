@@ -3,6 +3,7 @@ import { Box, Typography, Paper, Grid, useTheme, useMediaQuery } from '@mui/mate
 import { styled } from '@mui/material/styles';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { PageContainer, PageHeader } from '../components/layout';
 import KPICard from '../components/dashboard/KPICard';
 import RealTimeMap from '../components/dashboard/RealTimeMap';
 import EventFeed from '../components/dashboard/EventFeed';
@@ -60,13 +61,6 @@ const fetchDashboardData = async () => {
   };
 };
 
-const DashboardContainer = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(3),
-  [theme.breakpoints.down('sm')]: {
-    padding: theme.spacing(2),
-  },
-}));
-
 const SectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(2),
   fontWeight: 600,
@@ -108,15 +102,11 @@ const Dashboard = () => {
   };
 
   return (
-    <DashboardContainer>
-      <Box mb={4}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Operations Dashboard
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Real-time overview of your transportation operations
-        </Typography>
-      </Box>
+    <PageContainer>
+      <PageHeader
+        title="Operations Dashboard"
+        subtitle="Real-time overview of your transportation operations"
+      />
 
       {/* KPI Cards */}
       <Box mb={2}>
@@ -246,7 +236,7 @@ const Dashboard = () => {
           </motion.div>
         </Grid>
       </Grid>
-    </DashboardContainer>
+    </PageContainer>
   );
 };
 
