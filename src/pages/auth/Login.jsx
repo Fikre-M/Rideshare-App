@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
   Box,
@@ -91,6 +91,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleInputChange = (field) => (event) => {
     const value = field === 'rememberMe' ? event.target.checked : event.target.value;
@@ -150,65 +151,12 @@ const Login = () => {
     >
       <Container maxWidth="lg">
         <Grid container spacing={4} alignItems="center">
-          {/* Left Side - Branding */}
+          {/* Left Side - Login Form */}
           <Grid item xs={12} md={6}>
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
-            >
-              <Box sx={{ color: "white", mb: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  {/* <AIIcon sx={{ fontSize: 48, mr: 2 }} /> */}
-                  <LocalTaxiIcon sx={{ color: "natural.main", mr: 2 }} />
-                  <Typography variant="h3" fontWeight="bold">
-                    AI Rideshare
-                  </Typography>
-                </Box>
-                <Typography variant="h5" sx={{ mb: 3, opacity: 0.9 }}>
-                  The Future of Transportation
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{ mb: 4, opacity: 0.8, lineHeight: 1.6 }}
-                >
-                  Experience intelligent ride matching, dynamic pricing, and
-                  predictive analytics powered by cutting-edge artificial
-                  intelligence. Join thousands of users who trust our platform
-                  for their daily transportation needs.
-                </Typography>
-
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                  {[
-                    "🤖 AI Matching",
-                    "💰 Smart Pricing",
-                    "🗺️ Route Optimization",
-                    "📊 Predictive Analytics",
-                  ].map((feature, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        backgroundColor: "rgba(255,255,255,0.1)",
-                        backdropFilter: "blur(10px)",
-                        padding: "8px 16px",
-                        borderRadius: "20px",
-                        border: "1px solid rgba(255,255,255,0.2)",
-                      }}
-                    >
-                      <Typography variant="body2">{feature}</Typography>
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-            </motion.div>
-          </Grid>
-
-          {/* Right Side - Login Form */}
-          <Grid item xs={12} md={6}>
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
             >
               <StyledPaper>
                 <Box textAlign="center" mb={4}>
@@ -401,6 +349,71 @@ const Login = () => {
                   ))}
                 </Grid>
               </StyledPaper>
+            </motion.div>
+          </Grid>
+
+          {/* Right Side - Branding */}
+          <Grid item xs={12} md={6}>
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Box sx={{ color: "white", mb: 4 }}>
+                <Box 
+                  sx={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    mb: 3,
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      transform: "translateX(5px)",
+                      opacity: 0.9,
+                    }
+                  }}
+                  onClick={() => navigate('/')}
+                >
+                  <LocalTaxiIcon sx={{ fontSize: 48, mr: 2 }} />
+                  <Typography variant="h3" fontWeight="bold">
+                    AI Rideshare
+                  </Typography>
+                </Box>
+                <Typography variant="h5" sx={{ mb: 3, opacity: 0.9 }}>
+                  The Future of Transportation
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{ mb: 4, opacity: 0.8, lineHeight: 1.6 }}
+                >
+                  Experience intelligent ride matching, dynamic pricing, and
+                  predictive analytics powered by cutting-edge artificial
+                  intelligence. Join thousands of users who trust our platform
+                  for their daily transportation needs.
+                </Typography>
+
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                  {[
+                    "🤖 AI Matching",
+                    "💰 Smart Pricing",
+                    "🗺️ Route Optimization",
+                    "📊 Predictive Analytics",
+                  ].map((feature, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        backgroundColor: "rgba(255,255,255,0.1)",
+                        backdropFilter: "blur(10px)",
+                        padding: "8px 16px",
+                        borderRadius: "20px",
+                        border: "1px solid rgba(255,255,255,0.2)",
+                      }}
+                    >
+                      <Typography variant="body2">{feature}</Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
             </motion.div>
           </Grid>
         </Grid>

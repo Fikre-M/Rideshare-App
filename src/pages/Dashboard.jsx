@@ -185,16 +185,15 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Paper
+            <Box
               sx={{
                 height: { xs: 400, md: 500 },
                 borderRadius: 2,
                 overflow: 'hidden',
-                boxShadow: theme.shadows[3],
               }}
             >
               <RealTimeMap height={400} />
-            </Paper>
+            </Box>
           </motion.div>
         </Grid>
 
