@@ -77,10 +77,10 @@ const Header = ({ onDrawerToggle, onToggleCollapse, isCollapsed, drawerWidth }) 
         </Typography>
       </Box>
       <Divider />
-      <MenuItem onClick={handleMenuClose} component={RouterLink} to="/profile">
+      <MenuItem onClick={handleMenuClose} component={RouterLink} to="/dashboard/profile">
         <AccountIcon sx={{ mr: 1 }} /> Profile
       </MenuItem>
-      <MenuItem onClick={handleMenuClose} component={RouterLink} to="/settings">
+      <MenuItem onClick={handleMenuClose} component={RouterLink} to="/dashboard/settings">
         <SettingsIcon sx={{ mr: 1 }} /> Settings
       </MenuItem>
       <Divider />
