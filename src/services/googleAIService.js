@@ -1,7 +1,7 @@
 // Google AI Service - Real integration with Google Gemini API
 // 
 // This service integrates with Google's Gemini AI model (gemini-2.5-flash by default)
-// to provide intelligent chat responses for the rideshare platform.
+// to provide intelligent chat responses for any topic.
 //
 // Configuration:
 // - VITE_GOOGLE_AI_API_KEY: Your Google AI API key (get from https://makersuite.google.com/app/apikey)
@@ -9,9 +9,9 @@
 //
 // Features:
 // - Real-time chat with Google Gemini AI
+// - Can answer ANY question (weather, news, math, coding, general knowledge, etc.)
 // - Conversation history management per conversation ID
-// - Contextual responses tailored for rideshare platform
-// - Can answer general questions (weather, news, etc.)
+// - Context-aware suggestions based on conversation
 // - Automatic fallback to mock responses if API is unavailable
 //
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -79,11 +79,8 @@ class GoogleAIService {
         this.conversationHistory.set(conversationId, chat);
       }
 
-      // Add context about the rideshare platform
-      const contextualMessage = this.addRideshareContext(message);
-
-      // Send message and get response
-      const result = await chat.sendMessage(contextualMessage);
+      // Send message directly without restrictive context
+      const result = await chat.sendMessage(message);
       const response = result.response;
       const text = response.text();
 
@@ -117,31 +114,16 @@ class GoogleAIService {
     }
   }
 
-  addRideshareContext(message) {
-    // Add context about the rideshare platform to help the AI provide relevant responses
-    // But allow it to answer general questions too
-    const context = `You are an AI assistant for a rideshare platform. You primarily help users with:
-- Booking rides
-- Tracking drivers
-- Getting fare estimates
-- Managing trips and payments
-- Answering questions about the service
-
-However, you can also answer general questions when users ask about other topics like weather, news, etc.
-
-User message: ${message}
-
-Provide a helpful, concise response. Keep it friendly and professional.`;
-    
-    return context;
-  }
-
   generateSuggestions(userMessage, aiResponse) {
     const lowerMessage = userMessage.toLowerCase();
     const lowerResponse = aiResponse.toLowerCase();
 
     // Generate contextual suggestions based on the conversation
-    if (lowerMessage.includes('book') || lowerMessage.includes('ride')) {
+    if (lowerMessage.includes('weather') || lowerResponse.includes('weather')) {
+      return ['Weather forecast', 'Temperature today', 'Weather alerts', 'Weekly forecast'];
+    } else if (lowerMessage.includes('news') || lowerResponse.includes('news')) {
+      return ['Latest news', 'Technology news', 'Business news', 'Sports news'];
+    } else if (lowerMessage.includes('book') || lowerMessage.includes('ride')) {
       return ['Get fare estimate', 'Choose vehicle type', 'Schedule for later', 'Add stops'];
     } else if (lowerMessage.includes('track') || lowerMessage.includes('driver')) {
       return ['Call driver', 'Share trip', 'View route', 'Cancel trip'];
@@ -151,10 +133,15 @@ Provide a helpful, concise response. Keep it friendly and professional.`;
       return ['Yes, cancel', 'No, keep ride', 'Contact support', 'View policy'];
     } else if (lowerMessage.includes('payment') || lowerMessage.includes('card')) {
       return ['Add payment method', 'Update card', 'View receipts', 'Payment history'];
-    } else if (lowerResponse.includes('book') || lowerResponse.includes('ride')) {
-      return ['Book a ride', 'Get fare estimate', 'View nearby drivers', 'Schedule ride'];
+    } else if (lowerMessage.includes('help') || lowerMessage.includes('how')) {
+      return ['Tell me more', 'Show examples', 'Explain further', 'What else?'];
+    } else if (lowerMessage.includes('calculate') || lowerMessage.includes('math')) {
+      return ['Calculate more', 'Show steps', 'Convert units', 'Solve equation'];
+    } else if (lowerMessage.includes('code') || lowerMessage.includes('program')) {
+      return ['Explain code', 'Debug help', 'Best practices', 'More examples'];
     } else {
-      return ['Book a ride', 'Track driver', 'Fare estimate', 'Help & Support'];
+      // Generic helpful suggestions
+      return ['Tell me more', 'How does it work?', 'Show examples', 'What else can you do?'];
     }
   }
 

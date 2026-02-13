@@ -24,10 +24,10 @@ export const useChatStore = create(
           messages: [
             {
               id: Date.now(),
-              text: "Hello! I'm your AI assistant. How can I help you today?",
+              text: "Hello! I'm your AI assistant powered by Google Gemini. I can help you with anything - from answering questions about weather, news, and general knowledge, to helping with coding, math, and much more. What would you like to know?",
               isUser: false,
               timestamp: new Date(),
-              suggestions: ['Book a ride', 'Track driver', 'Get fare estimate', 'Help'],
+              suggestions: ['What can you do?', 'Tell me about yourself', 'Help me with something', 'Book a ride'],
             }
           ],
           createdAt: new Date().toISOString(),
