@@ -4,25 +4,31 @@
 // to provide intelligent chat responses for the rideshare platform.
 //
 // Configuration:
-// - GOOGLE_AI_API_KEY: Your Google AI API key (get from https://makersuite.google.com/app/apikey)
-// - GOOGLE_AI_MODEL: The model to use (default: gemini-2.5-flash)
+// - VITE_GOOGLE_AI_API_KEY: Your Google AI API key (get from https://makersuite.google.com/app/apikey)
+// - VITE_GOOGLE_AI_MODEL: The model to use (default: gemini-2.5-flash)
 //
 // Features:
 // - Real-time chat with Google Gemini AI
 // - Conversation history management per conversation ID
 // - Contextual responses tailored for rideshare platform
+// - Can answer general questions (weather, news, etc.)
 // - Automatic fallback to mock responses if API is unavailable
 //
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 class GoogleAIService {
   constructor() {
-    this.apiKey = import.meta.env.GOOGLE_AI_API_KEY;
-    this.modelName = import.meta.env.GOOGLE_AI_MODEL || 'gemini-2.5-flash';
+    this.apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY;
+    this.modelName = import.meta.env.VITE_GOOGLE_AI_MODEL || 'gemini-2.5-flash';
     this.genAI = null;
     this.model = null;
     this.chat = null;
     this.conversationHistory = new Map();
+    
+    // Log initialization status (remove in production)
+    console.log('Google AI Service initialized');
+    console.log('API Key present:', !!this.apiKey);
+    console.log('Model:', this.modelName);
   }
 
   initialize() {
@@ -44,17 +50,23 @@ class GoogleAIService {
   async sendChatMessage(message, conversationId = 'default') {
     // Initialize if not already done
     if (!this.genAI) {
+      console.log('Initializing Google AI...');
       const initialized = this.initialize();
       if (!initialized) {
+        console.warn('Google AI initialization failed, using mock response');
         return this.getMockResponse(message);
       }
+      console.log('Google AI initialized successfully');
     }
 
     try {
+      console.log('Sending message to Google AI:', message);
+      
       // Get or create chat session for this conversation
       let chat = this.conversationHistory.get(conversationId);
       
       if (!chat) {
+        console.log('Creating new chat session for conversation:', conversationId);
         chat = this.model.startChat({
           history: [],
           generationConfig: {
@@ -75,6 +87,8 @@ class GoogleAIService {
       const response = result.response;
       const text = response.text();
 
+      console.log('Received response from Google AI');
+
       // Generate suggestions based on the response
       const suggestions = this.generateSuggestions(message, text);
 
@@ -90,24 +104,30 @@ class GoogleAIService {
       
       // Check for specific error types
       if (error.message?.includes('API key')) {
-        console.error('Invalid API key. Please check your GOOGLE_AI_API_KEY environment variable.');
+        console.error('Invalid API key. Please check your VITE_GOOGLE_AI_API_KEY environment variable.');
       } else if (error.message?.includes('quota')) {
         console.error('API quota exceeded. Please check your Google AI usage limits.');
+      } else if (error.message?.includes('model')) {
+        console.error('Model not found. Please check your VITE_GOOGLE_AI_MODEL environment variable.');
       }
       
       // Fallback to mock response
+      console.warn('Falling back to mock response');
       return this.getMockResponse(message);
     }
   }
 
   addRideshareContext(message) {
     // Add context about the rideshare platform to help the AI provide relevant responses
-    const context = `You are an AI assistant for a rideshare platform. You help users with:
+    // But allow it to answer general questions too
+    const context = `You are an AI assistant for a rideshare platform. You primarily help users with:
 - Booking rides
 - Tracking drivers
 - Getting fare estimates
 - Managing trips and payments
 - Answering questions about the service
+
+However, you can also answer general questions when users ask about other topics like weather, news, etc.
 
 User message: ${message}
 
