@@ -19,6 +19,7 @@
     "@babel/runtime-corejs3": "^7.28.6",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
     "@livekit/react-components": "^1.1.0",
     "@loadable/component": "^5.16.7",

@@ -1,6 +1,7 @@
 // AI Service Layer - Handles all AI/ML API interactions with TensorFlow.js
 import axios from 'axios';
 import MLAIService from '../ai/services/MLAIService';
+import googleAIService from './googleAIService';
 
 const AI_API_BASE = import.meta.env.VITE_AI_API_URL || 'http://localhost:8001/api/ai';
 const USE_ML_MODELS = import.meta.env.VITE_USE_ML_MODELS !== 'false'; // Default to true
@@ -32,13 +33,12 @@ class AIService {
   // AI Chat Interface
   async sendChatMessage(message, context = {}) {
     try {
-      // For now, use mock response for chat
-      // TODO: Implement TensorFlow.js chat model
-      return this.mockChatResponse(message);
+      // Use Google AI service for chat
+      return await googleAIService.sendChatMessage(message, context.conversationId);
     } catch (error) {
       console.error('Chat AI error:', error);
       // Fallback to mock response
-      return this.mockChatResponse(message);
+      return googleAIService.getMockResponse(message);
     }
   }
 
