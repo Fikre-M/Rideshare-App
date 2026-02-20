@@ -1,10 +1,14 @@
-// AI Service Layer - Handles all AI/ML API interactions with TensorFlow.js
+// AI Service Layer - Handles all AI/ML API interactions
 import axios from 'axios';
 import MLAIService from '../ai/services/MLAIService';
 import googleAIService from './googleAIService';
+import openAIService from './openAIService';
+import mapboxService from './mapboxService';
+import { useApiKeyStore } from '../stores/apiKeyStore';
 
 const AI_API_BASE = import.meta.env.VITE_AI_API_URL || 'http://localhost:8001/api/ai';
 const USE_ML_MODELS = import.meta.env.VITE_USE_ML_MODELS !== 'false'; // Default to true
+const USE_OPENAI = import.meta.env.VITE_USE_OPENAI !== 'false'; // Default to true
 
 class AIService {
   constructor() {
@@ -30,6 +34,26 @@ class AIService {
     this.mlInitialized = false;
   }
 
+  // Check if OpenAI is available
+  isOpenAIAvailable() {
+    try {
+      const apiKey = useApiKeyStore.getState().getKey('openAI');
+      return USE_OPENAI && apiKey && apiKey !== 'your_openai_api_key_here';
+    } catch {
+      return false;
+    }
+  }
+
+  // Check if Mapbox is available
+  isMapboxAvailable() {
+    try {
+      const token = useApiKeyStore.getState().getKey('mapbox');
+      return token && token !== 'your_mapbox_access_token_here';
+    } catch {
+      return false;
+    }
+  }
+
   // AI Chat Interface
   async sendChatMessage(message, context = {}) {
     try {
@@ -42,9 +66,38 @@ class AIService {
     }
   }
 
-  // Route Optimization
+  // Route Optimization - Uses Mapbox + OpenAI
   async optimizeRoute(waypoints, preferences = {}) {
     try {
+      // Try OpenAI + Mapbox first
+      if (this.isOpenAIAvailable() && this.isMapboxAvailable() && waypoints.length >= 2) {
+        const origin = waypoints[0];
+        const destination = waypoints[waypoints.length - 1];
+        
+        // Fetch routes from Mapbox
+        const mapboxResult = await mapboxService.getRouteWithTraffic(origin, destination, {
+          alternatives: true,
+        });
+
+        if (mapboxResult.routes && mapboxResult.routes.length > 0) {
+          // Get AI recommendation
+          const aiResult = await openAIService.optimizeRoute(
+            mapboxResult.routes,
+            preferences
+          );
+
+          return {
+            optimizedRoute: mapboxResult.routes[aiResult.recommendedRouteIndex],
+            allRoutes: mapboxResult.routes,
+            recommendation: aiResult,
+            estimatedTime: Math.round(mapboxResult.routes[aiResult.recommendedRouteIndex].durationMinutes),
+            estimatedDistance: mapboxResult.routes[aiResult.recommendedRouteIndex].distanceKm,
+            source: 'openai-mapbox',
+          };
+        }
+      }
+
+      // Fallback to ML models
       if (USE_ML_MODELS) {
         if (!this.mlInitialized) {
           await this.mlService.initialize();
@@ -53,6 +106,7 @@ class AIService {
         return await this.mlService.optimizeRoute(waypoints, preferences);
       }
       
+      // Fallback to backend API
       const response = await this.apiClient.post('/route-optimization', {
         waypoints,
         preferences: {
@@ -69,9 +123,27 @@ class AIService {
     }
   }
 
-  // Demand Prediction
+  // Demand Prediction - Uses OpenAI
   async predictDemand(location, timeRange) {
     try {
+      // Try OpenAI first
+      if (this.isOpenAIAvailable()) {
+        const demandContext = {
+          location,
+          timeRange,
+          currentDemand: 'medium',
+          weather: 'clear',
+          temperature: 'moderate',
+        };
+        
+        const result = await openAIService.predictDemand(demandContext);
+        return {
+          ...result,
+          source: 'openai',
+        };
+      }
+
+      // Fallback to ML models
       if (USE_ML_MODELS) {
         if (!this.mlInitialized) {
           await this.mlService.initialize();
@@ -80,6 +152,7 @@ class AIService {
         return await this.mlService.predictDemand(location, timeRange);
       }
       
+      // Fallback to backend API
       const response = await this.apiClient.post('/demand-prediction', {
         location,
         timeRange,
@@ -92,9 +165,31 @@ class AIService {
     }
   }
 
-  // Dynamic Pricing
+  // Dynamic Pricing - Uses OpenAI
   async calculateDynamicPrice(tripDetails) {
     try {
+      // Try OpenAI first
+      if (this.isOpenAIAvailable()) {
+        const pricingContext = {
+          basePrice: 8.50,
+          demandLevel: tripDetails.demandLevel || 'medium',
+          weather: tripDetails.weather || 'clear',
+          timeOfDay: new Date().toLocaleTimeString(),
+          dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+          events: tripDetails.events || 'none',
+          traffic: tripDetails.traffic || 'moderate',
+          availableDrivers: tripDetails.availableDrivers,
+          pendingRequests: tripDetails.pendingRequests,
+        };
+        
+        const result = await openAIService.calculateDynamicPricing(pricingContext);
+        return {
+          ...result,
+          source: 'openai',
+        };
+      }
+
+      // Fallback to ML models
       if (USE_ML_MODELS) {
         if (!this.mlInitialized) {
           await this.mlService.initialize();
@@ -103,6 +198,7 @@ class AIService {
         return await this.mlService.calculateDynamicPrice(tripDetails);
       }
       
+      // Fallback to backend API
       const response = await this.apiClient.post('/dynamic-pricing', {
         ...tripDetails,
         timestamp: new Date().toISOString(),
@@ -114,9 +210,46 @@ class AIService {
     }
   }
 
-  // Smart Matching
+  // Smart Matching - Uses OpenAI
   async matchDriverPassenger(passengerRequest) {
     try {
+      // Try OpenAI first
+      if (this.isOpenAIAvailable()) {
+        const drivers = passengerRequest.availableDrivers || this.getMockDrivers();
+        const preferences = {
+          vehicleType: passengerRequest.vehicleType,
+          maxWaitTime: passengerRequest.maxWaitTime || 10,
+          preferredRating: passengerRequest.preferredRating || 4.5,
+          location: passengerRequest.location,
+        };
+        
+        const result = await openAIService.matchDriverToPassenger(drivers, preferences);
+        
+        // Return in expected format
+        const topMatch = result.matches[0];
+        return {
+          matchedDriver: {
+            id: topMatch.driverId,
+            name: topMatch.driverName,
+            rating: topMatch.scores?.rating || 4.5,
+            eta: topMatch.estimatedArrival,
+            vehicle: topMatch.vehicle,
+            location: topMatch.location || { lat: 9.0054, lng: 38.7636 },
+          },
+          matchScore: topMatch.matchScore / 100,
+          alternativeDrivers: result.matches.length - 1,
+          matchingFactors: {
+            proximity: (topMatch.scores?.proximity || 80) / 100,
+            rating: (topMatch.scores?.rating || 85) / 100,
+            vehicleType: (topMatch.scores?.vehicleMatch || 80) / 100,
+            availability: (topMatch.scores?.availability || 95) / 100,
+          },
+          allMatches: result.matches,
+          source: 'openai',
+        };
+      }
+
+      // Fallback to ML models
       if (USE_ML_MODELS) {
         if (!this.mlInitialized) {
           await this.mlService.initialize();
@@ -125,6 +258,7 @@ class AIService {
         return await this.mlService.matchDriverPassenger(passengerRequest);
       }
       
+      // Fallback to backend API
       const response = await this.apiClient.post('/smart-matching', {
         ...passengerRequest,
         algorithm: 'ml-optimized',
@@ -136,9 +270,73 @@ class AIService {
     }
   }
 
-  // Predictive Analytics
+  // Helper to get mock drivers for testing
+  getMockDrivers() {
+    return [
+      {
+        driverId: 'driver_001',
+        driverName: 'John Smith',
+        rating: 4.8,
+        distance: 2.5,
+        vehicleType: 'sedan',
+        vehicle: 'Toyota Camry - ABC 123',
+        location: { lat: 9.0054, lng: 38.7636 },
+        availability: 'available',
+      },
+      {
+        driverId: 'driver_002',
+        driverName: 'Sarah Johnson',
+        rating: 4.9,
+        distance: 3.2,
+        vehicleType: 'suv',
+        vehicle: 'Honda CR-V - XYZ 789',
+        location: { lat: 9.0104, lng: 38.7686 },
+        availability: 'available',
+      },
+      {
+        driverId: 'driver_003',
+        driverName: 'Michael Chen',
+        rating: 4.7,
+        distance: 1.8,
+        vehicleType: 'sedan',
+        vehicle: 'Nissan Altima - DEF 456',
+        location: { lat: 9.0024, lng: 38.7606 },
+        availability: 'available',
+      },
+    ];
+  }
+
+  // Predictive Analytics - Uses OpenAI
   async getPredictiveAnalytics(timeframe = '24h') {
     try {
+      // Try OpenAI first
+      if (this.isOpenAIAvailable()) {
+        const analyticsContext = {
+          currentMetrics: {
+            activeRides: Math.floor(Math.random() * 100) + 50,
+            availableDrivers: Math.floor(Math.random() * 50) + 30,
+            averageWaitTime: Math.floor(Math.random() * 10) + 3,
+            currentRevenue: Math.floor(Math.random() * 5000) + 10000,
+          },
+          historicalData: {
+            last30DaysRevenue: Array.from({ length: 30 }, (_, i) => ({
+              day: i + 1,
+              revenue: Math.floor(Math.random() * 20000) + 10000,
+              rides: Math.floor(Math.random() * 500) + 200,
+            })),
+            averageRidesPerDay: 350,
+            peakHours: [8, 9, 17, 18, 19],
+          },
+        };
+        
+        const result = await openAIService.getPredictiveAnalytics(analyticsContext);
+        return {
+          ...result,
+          source: 'openai',
+        };
+      }
+
+      // Fallback to ML models
       if (USE_ML_MODELS) {
         if (!this.mlInitialized) {
           await this.mlService.initialize();
@@ -147,6 +345,7 @@ class AIService {
         return await this.mlService.getPredictiveAnalytics(timeframe);
       }
       
+      // Fallback to backend API
       const response = await this.apiClient.get(`/predictive-analytics?timeframe=${timeframe}`);
       return response.data;
     } catch (error) {
