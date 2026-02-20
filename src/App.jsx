@@ -19,6 +19,8 @@ import LoadingScreen from "./components/common/LoadingScreen";
 import ScrollToTop from "./components/common/ScrollToTop";
 import ChatBot, { ChatTrigger } from "./components/ai/ChatBot";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import SetupRequired from "./components/onboarding/SetupRequired";
+import { useApiKeyStore } from "./stores/apiKeyStore";
 import config from "./config/config";
 import { queryClient } from "./lib/queryClient";
 
@@ -219,6 +221,17 @@ const PublicRoute = ({ children }) => {
 
 const AppRoutes = () => {
   const [chatOpen, setChatOpen] = useState(false);
+  const { setupComplete, showSetupModal } = useApiKeyStore();
+
+  // Check if setup is required on first load
+  useEffect(() => {
+    useApiKeyStore.getState().initialize();
+  }, []);
+
+  // Show setup screen if no API keys are configured
+  if (!setupComplete && showSetupModal) {
+    return <SetupRequired />;
+  }
 
   // Keyboard shortcut: Cmd/Ctrl + K to toggle chat
   useEffect(() => {

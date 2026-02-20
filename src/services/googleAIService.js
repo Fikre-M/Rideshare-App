@@ -15,48 +15,79 @@
 // - Automatic fallback to mock responses if API is unavailable
 //
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { useApiKeyStore } from '../stores/apiKeyStore';
 
 class GoogleAIService {
   constructor() {
-    this.apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY;
-    this.modelName = import.meta.env.VITE_GOOGLE_AI_MODEL || 'gemini-2.5-flash';
     this.genAI = null;
     this.model = null;
     this.chat = null;
     this.conversationHistory = new Map();
+    this.currentApiKey = null;
+    this.currentModel = null;
+  }
+
+  getApiKey() {
+    // Priority: Store > Runtime Config > Env
+    const storeKey = useApiKeyStore.getState().getKey('googleAI');
+    if (storeKey && storeKey !== 'your_google_ai_api_key_here') {
+      return storeKey;
+    }
     
-    // Log initialization status (remove in production)
-    console.log('=== Google AI Service Initialization ===');
-    console.log('API Key:', this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'NOT SET');
-    console.log('Model:', this.modelName);
-    console.log('All env vars:', import.meta.env);
-    console.log('=======================================');
+    const runtimeKey = window.APP_CONFIG?.googleAIApiKey;
+    if (runtimeKey && runtimeKey !== 'your_google_ai_api_key_here') {
+      return runtimeKey;
+    }
+    
+    const envKey = import.meta.env.VITE_GOOGLE_AI_API_KEY;
+    if (envKey && envKey !== 'your_google_ai_api_key_here') {
+      return envKey;
+    }
+    
+    return null;
+  }
+
+  getModel() {
+    const storeModel = useApiKeyStore.getState().getKey('googleAIModel');
+    if (storeModel) return storeModel;
+    
+    return window.APP_CONFIG?.googleAIModel || import.meta.env.VITE_GOOGLE_AI_MODEL || 'gemini-2.5-flash';
   }
 
   initialize() {
+    const apiKey = this.getApiKey();
+    const modelName = this.getModel();
+    
     console.log('=== Initializing Google AI ===');
     console.log('API Key check:', {
-      exists: !!this.apiKey,
-      value: this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'undefined/null',
-      isPlaceholder: this.apiKey === 'your_google_ai_api_key_here'
+      exists: !!apiKey,
+      value: apiKey ? `${apiKey.substring(0, 10)}...` : 'undefined/null',
+      isPlaceholder: apiKey === 'your_google_ai_api_key_here'
     });
     
-    if (!this.apiKey || this.apiKey === 'your_google_ai_api_key_here') {
-      console.warn('❌ Google AI API key not configured. Using mock responses.');
-      console.warn('Please set VITE_GOOGLE_AI_API_KEY in your .env file and restart the dev server.');
+    if (!apiKey || apiKey === 'your_google_ai_api_key_here') {
+      console.warn('❌ Google AI API key not configured.');
+      console.warn('Please configure via Settings or set VITE_GOOGLE_AI_API_KEY in your .env file.');
       return false;
     }
 
-    try {
-      console.log('✅ Creating Google AI client...');
-      this.genAI = new GoogleGenerativeAI(this.apiKey);
-      this.model = this.genAI.getGenerativeModel({ model: this.modelName });
-      console.log('✅ Google AI initialized successfully!');
-      return true;
-    } catch (error) {
-      console.error('❌ Failed to initialize Google AI:', error);
-      return false;
+    // Reinitialize if key or model changed
+    if (this.currentApiKey !== apiKey || this.currentModel !== modelName) {
+      try {
+        console.log('✅ Creating Google AI client...');
+        this.genAI = new GoogleGenerativeAI(apiKey);
+        this.model = this.genAI.getGenerativeModel({ model: modelName });
+        this.currentApiKey = apiKey;
+        this.currentModel = modelName;
+        console.log('✅ Google AI initialized successfully!');
+        return true;
+      } catch (error) {
+        console.error('❌ Failed to initialize Google AI:', error);
+        return false;
+      }
     }
+    
+    return true;
   }
 
   async sendChatMessage(message, conversationId = 'default') {
