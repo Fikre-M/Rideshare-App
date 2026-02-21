@@ -1,8 +1,9 @@
 // Custom hook for AI queries with caching, debouncing, and deduplication
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import aiBudgetGuard from '../services/aiBudgetGuard';
 import { toast } from 'react-hot-toast';
+import { useAIStatusStore } from './useAIStatus';
 
 // Debounce delay for AI calls
 const DEBOUNCE_DELAY = 800;
@@ -32,11 +33,12 @@ export const useAIQuery = ({
   const queryClient = useQueryClient();
   const debounceTimerRef = useRef(null);
   const lastParamsRef = useRef(null);
+  const { setThinking, setReady, setError } = useAIStatusStore();
   
   // Check budget before making request
   const canMakeRequest = aiBudgetGuard.canMakeRequest();
   
-  // Wrapped query function with budget tracking
+  // Wrapped query function with budget tracking and status updates
   const wrappedQueryFn = useCallback(async (context) => {
     // Check budget
     if (!aiBudgetGuard.canMakeRequest()) {
@@ -54,6 +56,9 @@ export const useAIQuery = ({
       );
     }
     
+    // Set AI status to thinking
+    setThinking();
+    
     try {
       // Execute the actual query
       const result = await queryFn(context);
@@ -63,12 +68,21 @@ export const useAIQuery = ({
         aiBudgetGuard.trackUsage(feature, result.tokenUsage);
       }
       
+      // Set AI status to ready
+      setReady();
+      
       return result;
     } catch (error) {
+      // Set AI status to error
+      setError();
+      
+      // Reset to ready after 3 seconds
+      setTimeout(() => setReady(), 3000);
+      
       // Don't track usage on errors
       throw error;
     }
-  }, [queryFn, feature]);
+  }, [queryFn, feature, setThinking, setReady, setError]);
   
   // Use TanStack Query with caching and deduplication
   const query = useQuery({

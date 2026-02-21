@@ -20,6 +20,7 @@ import ScrollToTop from "./components/common/ScrollToTop";
 import { LazyChatBot } from "./components/ai/LazyAIComponents";
 import AICostTracker from "./components/ai/AICostTracker";
 import { MotionProvider } from "./components/common/OptimizedMotion";
+import { CommandPalette } from "./components/modern/CommandPalette";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import SetupRequired from "./components/onboarding/SetupRequired";
 import { useApiKeyStore } from "./stores/apiKeyStore";
@@ -223,6 +224,7 @@ const PublicRoute = ({ children }) => {
 
 const AppRoutes = () => {
   const [chatOpen, setChatOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { setupComplete, showSetupModal } = useApiKeyStore();
 
   // Check if setup is required on first load
@@ -235,22 +237,28 @@ const AppRoutes = () => {
     return <SetupRequired />;
   }
 
-  // Keyboard shortcut: Cmd/Ctrl + K to toggle chat
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Cmd/Ctrl + K for command palette
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setChatOpen(prev => !prev);
+        setCommandPaletteOpen(prev => !prev);
       }
+      
       // Escape to close
-      if (e.key === 'Escape' && chatOpen) {
-        setChatOpen(false);
+      if (e.key === 'Escape') {
+        if (commandPaletteOpen) {
+          setCommandPaletteOpen(false);
+        } else if (chatOpen) {
+          setChatOpen(false);
+        }
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [chatOpen]);
+  }, [chatOpen, commandPaletteOpen]);
 
   return (
     <>
@@ -313,6 +321,16 @@ const AppRoutes = () => {
       <Suspense fallback={null}>
         <LazyChatBot open={chatOpen} onClose={() => setChatOpen(false)} />
       </Suspense>
+      
+      {/* Command Palette - Cmd/Ctrl + K */}
+      <CommandPalette 
+        open={commandPaletteOpen} 
+        onClose={() => setCommandPaletteOpen(false)}
+        onAICommand={(command) => {
+          console.log('AI Command:', command);
+          // Handle AI commands here
+        }}
+      />
       
       {/* AI Cost Tracker Widget */}
       <AICostTracker />
