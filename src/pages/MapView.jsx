@@ -25,7 +25,7 @@ import {
   SwapVert as SwapIcon,
   Navigation as NavigationIcon,
 } from '@mui/icons-material';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import OpenStreetMap from '../components/map/OpenStreetMap';
 import VehicleMarker from '../components/map/VehicleMarker';
 
@@ -367,7 +367,7 @@ const MapView = () => {
 
           {/* Selected Vehicle Details */}
           {selectedVehicle && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -397,7 +397,7 @@ const MapView = () => {
                   </Button>
                 </Box>
               </Paper>
-            </motion.div>
+            </m.div>
           )}
 
           {/* Legend */}

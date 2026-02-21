@@ -1,6 +1,6 @@
 import { Box, Button, Container, Typography, Grid, Paper, styled } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useTheme } from '@mui/material/styles';
 import { useAuth } from '@/context/AuthContext';
 
@@ -65,7 +65,7 @@ const LandingPage = () => {
         <Container maxWidth="lg">
           <Grid container spacing={6} alignItems="center">
             <Grid item xs={12} md={6}>
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
@@ -135,10 +135,10 @@ const LandingPage = () => {
                     Sign In
                   </Button>
                 </Box>
-              </motion.div>
+              </m.div>
             </Grid>
             <Grid item xs={12} md={6}>
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
@@ -167,7 +167,7 @@ const LandingPage = () => {
                     Experience the future of transportation with intelligent algorithms
                   </Typography>
                 </Box>
-              </motion.div>
+              </m.div>
             </Grid>
           </Grid>
         </Container>
@@ -186,7 +186,7 @@ const LandingPage = () => {
           <Grid container spacing={4}>
             {features.map((feature, index) => (
               <Grid item xs={12} md={4} key={index}>
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -203,7 +203,7 @@ const LandingPage = () => {
                       {feature.description}
                     </Typography>
                   </FeatureCard>
-                </motion.div>
+                </m.div>
               </Grid>
             ))}
           </Grid>

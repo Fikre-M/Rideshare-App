@@ -13,6 +13,8 @@ import { ThemeProvider, createTheme, useTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { SnackbarProvider } from "notistack";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { Fab, Tooltip, Badge, useMediaQuery } from "@mui/material";
+import { Chat as ChatIcon } from "@mui/icons-material";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/common/LoadingScreen";
@@ -228,6 +230,8 @@ const AppRoutes = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { setupComplete, showSetupModal } = useApiKeyStore();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Check if setup is required on first load
   useEffect(() => {
@@ -246,6 +250,12 @@ const AppRoutes = () => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setCommandPaletteOpen(prev => !prev);
+      }
+      
+      // Cmd/Ctrl + Shift + A for AI chatbot
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        setChatOpen(prev => !prev);
       }
       
       // Escape to close
@@ -323,6 +333,31 @@ const AppRoutes = () => {
       <Suspense fallback={null}>
         <LazyChatBot open={chatOpen} onClose={() => setChatOpen(false)} />
       </Suspense>
+      
+      {/* Floating Action Button to open ChatBot */}
+      {!chatOpen && (
+        <Tooltip title="Open AI Assistant (Cmd/Ctrl + Shift + A)" placement="left">
+          <Fab
+            color="primary"
+            aria-label="open ai chat"
+            onClick={() => setChatOpen(true)}
+            sx={{
+              position: 'fixed',
+              bottom: isMobile ? 16 : 24,
+              right: isMobile ? 16 : 24,
+              zIndex: 9998,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #5568d3 0%, #63408a 100%)',
+                transform: 'scale(1.05)',
+              },
+              transition: 'all 0.2s ease-in-out',
+            }}
+          >
+            <ChatIcon />
+          </Fab>
+        </Tooltip>
+      )}
       
       {/* Command Palette - Cmd/Ctrl + K */}
       <CommandPalette 

@@ -22,7 +22,7 @@ import {
 } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { styled } from '@mui/material/styles';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import aiService from '../../services/aiService';
 
 const PredictionCard = styled(Card)(({ theme }) => ({
@@ -146,7 +146,7 @@ const DemandPredictor = () => {
       )}
 
       {prediction && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -285,7 +285,7 @@ const DemandPredictor = () => {
               </Paper>
             </Grid>
           </Grid>
-        </motion.div>
+        </m.div>
       )}
     </Box>
   );

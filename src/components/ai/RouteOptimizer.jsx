@@ -23,7 +23,7 @@ import {
   Traffic as TrafficIcon,
   TrendingUp as OptimizeIcon,
 } from '@mui/icons-material';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import OpenStreetMap from '../map/OpenStreetMap';
 import RouteDisplay from '../map/RouteDisplay';
 import aiService from '../../services/aiService';
@@ -209,7 +209,7 @@ const RouteOptimizer = () => {
           )}
 
           {optimization && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -269,7 +269,7 @@ const RouteOptimizer = () => {
                   />
                 </Box>
               </Paper>
-            </motion.div>
+            </m.div>
           )}
         </Grid>
       </Grid>

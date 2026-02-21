@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useTheme, useMediaQuery, IconButton, Tooltip } from '@mui/material';
 import {
   ContentCopy as CopyIcon,
@@ -128,7 +128,7 @@ const ChatBot = ({ open, onClose }) => {
   const messages = conversation?.messages || [];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -288,7 +288,7 @@ const ChatBot = ({ open, onClose }) => {
           }}
         >
           {messages.map((message) => (
-            <motion.div
+            <m.div
               key={message.id}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -392,7 +392,7 @@ const ChatBot = ({ open, onClose }) => {
                 {message.suggestions && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
                     {message.suggestions.map((suggestion, index) => (
-                      <motion.button
+                      <m.button
                         key={index}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -416,16 +416,16 @@ const ChatBot = ({ open, onClose }) => {
                         }}
                       >
                         {suggestion}
-                      </motion.button>
+                      </m.button>
                     ))}
                   </div>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           ))}
           
           {isLoading && (
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               style={{ display: 'flex', justifyContent: 'flex-start' }}
@@ -495,7 +495,7 @@ const ChatBot = ({ open, onClose }) => {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
           
           <div ref={messagesEndRef} />
@@ -544,7 +544,7 @@ const ChatBot = ({ open, onClose }) => {
                 }}
               />
             </div>
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleSendMessage}
@@ -575,11 +575,11 @@ const ChatBot = ({ open, onClose }) => {
               <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
-            </motion.button>
+            </m.button>
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 
@@ -596,7 +596,7 @@ const ChatTrigger = ({ onClick }) => {
   }, []);
 
   return (
-    <motion.button
+    <m.button
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -613,7 +613,7 @@ const ChatTrigger = ({ onClick }) => {
       }}
       className="bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-600 text-white rounded-full shadow-2xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center"
     >
-      <motion.div
+      <m.div
         animate={isHovered ? { rotate: [0, -10, 10, -10, 0] } : {}}
         transition={{ duration: 0.5, ease: "easeInOut" }}
         className="relative z-10"
@@ -636,10 +636,10 @@ const ChatTrigger = ({ onClick }) => {
             d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.847a4.5 4.5 0 003.09 3.09L15.75 12l-2.847.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
           />
         </svg>
-      </motion.div>
+      </m.div>
 
       {isPulsing && (
-        <motion.div
+        <m.div
           className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400 via-purple-500 to-indigo-500"
           animate={{
             scale: [1, 1.3, 1],
@@ -656,7 +656,7 @@ const ChatTrigger = ({ onClick }) => {
       <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
         <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
       </div>
-    </motion.button>
+    </m.button>
   );
 };
 

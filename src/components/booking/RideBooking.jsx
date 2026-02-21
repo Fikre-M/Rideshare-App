@@ -31,7 +31,7 @@ import {
   Message as MessageIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import aiService from '../../services/aiService';
 
 const BookingCard = styled(Card)(({ theme }) => ({
@@ -294,7 +294,7 @@ const RideBooking = () => {
             <Grid container spacing={3}>
               {vehicleTypes.map((vehicle) => (
                 <Grid item xs={12} key={vehicle.id}>
-                  <motion.div
+                  <m.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -352,7 +352,7 @@ const RideBooking = () => {
                         </Grid>
                       </CardContent>
                     </VehicleCard>
-                  </motion.div>
+                  </m.div>
                 </Grid>
               ))}
             </Grid>
@@ -460,7 +460,7 @@ const RideBooking = () => {
             <AnimatePresence>
               {bookingConfirmed && (
                 <>
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -475,7 +475,7 @@ const RideBooking = () => {
                     }}
                     onClick={() => setBookingConfirmed(false)}
                   />
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, scale: 0.8, y: 50 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.8, y: 50 }}
@@ -532,7 +532,7 @@ const RideBooking = () => {
                         </Button>
                       </Box>
                     </Paper>
-                  </motion.div>
+                  </m.div>
                 </>
               )}
             </AnimatePresence>
@@ -566,7 +566,7 @@ const RideBooking = () => {
         )}
 
         <AnimatePresence mode="wait">
-          <motion.div
+          <m.div
             key={activeStep}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -574,7 +574,7 @@ const RideBooking = () => {
             transition={{ duration: 0.3 }}
           >
             {renderStepContent(activeStep)}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>

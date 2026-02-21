@@ -26,7 +26,7 @@ import {
   Clear as ClearIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 
 const NotificationMenu = styled(Menu)(({ theme }) => ({
@@ -211,7 +211,7 @@ const NotificationCenter = () => {
             {notifications.map((notification) => {
               const IconComponent = notification.icon;
               return (
-                <motion.div
+                <m.div
                   key={notification.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -271,7 +271,7 @@ const NotificationCenter = () => {
                       <ClearIcon fontSize="small" />
                     </IconButton>
                   </NotificationItem>
-                </motion.div>
+                </m.div>
               );
             })}
           </AnimatePresence>

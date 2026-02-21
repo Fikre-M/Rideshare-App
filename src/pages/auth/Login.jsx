@@ -27,7 +27,7 @@ import {
   SmartToy as AIIcon,
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
-import { motion } from "framer-motion";
+import { m } from 'framer-motion';
 import LocalTaxiIcon from "@mui/icons-material/LocalTaxi";
 
 
@@ -153,7 +153,7 @@ const Login = () => {
         <Grid container spacing={4} alignItems="center">
           {/* Left Side - Login Form */}
           <Grid item xs={12} md={6}>
-            <motion.div
+            <m.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
@@ -349,12 +349,12 @@ const Login = () => {
                   ))}
                 </Grid>
               </StyledPaper>
-            </motion.div>
+            </m.div>
           </Grid>
 
           {/* Right Side - Branding */}
           <Grid item xs={12} md={6}>
-            <motion.div
+            <m.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -414,7 +414,7 @@ const Login = () => {
                   ))}
                 </Box>
               </Box>
-            </motion.div>
+            </m.div>
           </Grid>
         </Grid>
       </Container>

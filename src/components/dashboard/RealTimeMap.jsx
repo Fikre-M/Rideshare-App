@@ -206,7 +206,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Paper, Button, IconButton, Tooltip, Chip } from '@mui/material';
 import { Truck, MapPin, RefreshCw, Info, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 const RealTimeMap = ({ height = 400 }) => {
   const [showMap, setShowMap] = useState(false);
@@ -402,7 +402,7 @@ const RealTimeMap = ({ height = 400 }) => {
 
       {/* Vehicle markers */}
       {vehicles.map((vehicle) => (
-        <motion.div
+        <m.div
           key={vehicle.id}
           style={{
             position: 'absolute',
@@ -456,7 +456,7 @@ const RealTimeMap = ({ height = 400 }) => {
               />
             )}
           </Box>
-        </motion.div>
+        </m.div>
       ))}
 
       {/* Vehicle Status Legend */}
@@ -497,7 +497,7 @@ const RealTimeMap = ({ height = 400 }) => {
       {/* Selected Vehicle Popup */}
       <AnimatePresence>
         {selectedVehicle && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -564,7 +564,7 @@ const RealTimeMap = ({ height = 400 }) => {
                 )}
               </Box>
             </Paper>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

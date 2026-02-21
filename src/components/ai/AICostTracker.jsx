@@ -22,7 +22,7 @@ import { useBudgetStore } from '../../services/aiBudgetGuard';
 const TrackerContainer = styled(Paper)(({ theme }) => ({
   position: 'fixed',
   bottom: theme.spacing(2),
-  right: theme.spacing(2),
+  left: theme.spacing(2),
   width: 320,
   maxWidth: '90vw',
   zIndex: 1300,

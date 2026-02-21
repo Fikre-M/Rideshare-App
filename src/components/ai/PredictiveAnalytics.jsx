@@ -44,7 +44,7 @@ import {
   Cell,
 } from 'recharts';
 import { styled } from '@mui/material/styles';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import aiService from '../../services/aiService';
 
 const MetricCard = styled(Card)(({ theme, trend }) => ({
@@ -165,7 +165,7 @@ const PredictiveAnalytics = () => {
       )}
 
       {analytics && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -305,7 +305,7 @@ const PredictiveAnalytics = () => {
                 <Grid container spacing={2}>
                   {analytics.insights.map((insight, index) => (
                     <Grid item xs={12} md={6} key={index}>
-                      <motion.div
+                      <m.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -330,7 +330,7 @@ const PredictiveAnalytics = () => {
                             </Box>
                           </Box>
                         </InsightCard>
-                      </motion.div>
+                      </m.div>
                     </Grid>
                   ))}
                 </Grid>
@@ -388,7 +388,7 @@ const PredictiveAnalytics = () => {
               </Paper>
             </Grid>
           </Grid>
-        </motion.div>
+        </m.div>
       )}
     </Box>
   );

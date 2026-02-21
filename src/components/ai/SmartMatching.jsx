@@ -31,7 +31,7 @@ import {
 } from '@mui/icons-material';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts';
 import { styled } from '@mui/material/styles';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import aiService from '../../services/aiService';
 
 const MatchCard = styled(Card)(({ theme, selected }) => ({
@@ -221,7 +221,7 @@ const SmartMatching = () => {
       )}
 
       {matching && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -416,7 +416,7 @@ const SmartMatching = () => {
               </Paper>
             </Grid>
           </Grid>
-        </motion.div>
+        </m.div>
       )}
     </Box>
   );

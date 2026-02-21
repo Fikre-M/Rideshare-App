@@ -1,7 +1,7 @@
 import { Box, Typography, Button, Container, Paper } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Home as HomeIcon,
   SearchOff as NotFoundIcon,
@@ -45,13 +45,13 @@ const NotFound = () => {
       }}
     >
       <Container maxWidth="md">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
           <StyledPaper>
-            <motion.div
+            <m.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
@@ -64,7 +64,7 @@ const NotFound = () => {
                   opacity: 0.8 
                 }} 
               />
-            </motion.div>
+            </m.div>
             
             <Typography 
               variant="h1" 
@@ -137,7 +137,7 @@ const NotFound = () => {
               </Typography>
             </Box>
           </StyledPaper>
-        </motion.div>
+        </m.div>
       </Container>
     </Box>
   );

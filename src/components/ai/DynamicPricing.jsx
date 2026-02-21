@@ -26,7 +26,7 @@ import {
 } from '@mui/icons-material';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { styled } from '@mui/material/styles';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import aiService from '../../services/aiService';
 
 const PriceCard = styled(Card)(({ theme, surge }) => ({
@@ -204,7 +204,7 @@ const DynamicPricing = () => {
       )}
 
       {pricing && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -354,7 +354,7 @@ const DynamicPricing = () => {
               </Paper>
             </Grid>
           </Grid>
-        </motion.div>
+        </m.div>
       )}
     </Box>
   );

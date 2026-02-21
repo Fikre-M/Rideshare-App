@@ -35,7 +35,7 @@ import {
   TrendingUp as StatsIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { PageContainer, PageHeader } from '../components/layout';
 import ImageUpload from '../components/common/ImageUpload';
@@ -198,7 +198,7 @@ const Profile = () => {
       <Grid container spacing={3}>
         {/* Profile Header */}
         <Grid item xs={12}>
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -285,7 +285,7 @@ const Profile = () => {
                 </Box>
               </CardContent>
             </ProfileCard>
-          </motion.div>
+          </m.div>
         </Grid>
 
         {/* Stats */}
@@ -296,7 +296,7 @@ const Profile = () => {
           <Grid container spacing={2}>
             {stats.map((stat, index) => (
               <Grid item xs={6} md={3} key={index}>
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -322,7 +322,7 @@ const Profile = () => {
                       </Typography>
                     </CardContent>
                   </StatsCard>
-                </motion.div>
+                </m.div>
               </Grid>
             ))}
           </Grid>
@@ -337,7 +337,7 @@ const Profile = () => {
             <Grid container spacing={2}>
               {achievements.map((achievement) => (
                 <Grid item xs={6} md={4} key={achievement.id}>
-                  <motion.div
+                  <m.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -352,7 +352,7 @@ const Profile = () => {
                         {achievement.description}
                       </Typography>
                     </AchievementBadge>
-                  </motion.div>
+                  </m.div>
                 </Grid>
               ))}
             </Grid>

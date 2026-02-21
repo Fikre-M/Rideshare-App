@@ -34,7 +34,7 @@ import {
   AdminPanelSettings as AdminIcon,
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
-import { motion } from "framer-motion";
+import { m } from 'framer-motion';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -189,7 +189,7 @@ const Register = () => {
             <Grid container spacing={3}>
               {roleOptions.map((option) => (
                 <Grid item xs={12} md={4} key={option.value}>
-                  <motion.div
+                  <m.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -215,7 +215,7 @@ const Register = () => {
                         {option.description}
                       </Typography>
                     </RoleCard>
-                  </motion.div>
+                  </m.div>
                 </Grid>
               ))}
             </Grid>
@@ -387,7 +387,7 @@ const Register = () => {
       }}
     >
       <Container maxWidth="md">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -503,7 +503,7 @@ const Register = () => {
               </Typography>
             </Box>
           </StyledPaper>
-        </motion.div>
+        </m.div>
       </Container>
     </Box>
   );

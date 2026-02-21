@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { Download, X, Smartphone } from 'lucide-react';
 
 const InstallPrompt = () => {
@@ -96,7 +96,7 @@ const InstallPrompt = () => {
   return (
     <AnimatePresence>
       {showPrompt && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
@@ -219,7 +219,7 @@ const InstallPrompt = () => {
               <span>Install App</span>
             </button>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 /**
  * PageTransition - Animated wrapper for page transitions
@@ -37,7 +37,7 @@ const PageTransition = ({ children, variant = 'fade' }) => {
   const selectedVariant = variants[variant] || variants.fade;
 
   return (
-    <motion.div
+    <m.div
       initial={selectedVariant.initial}
       animate={selectedVariant.animate}
       exit={selectedVariant.exit}
@@ -45,7 +45,7 @@ const PageTransition = ({ children, variant = 'fade' }) => {
       style={{ width: '100%' }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 };
 

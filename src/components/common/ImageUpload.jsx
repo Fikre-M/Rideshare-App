@@ -20,7 +20,7 @@ import {
   Delete as DeleteIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 const ImageUpload = ({
   currentImage,
@@ -295,7 +295,7 @@ const ImageUpload = ({
         {/* Error message */}
         <AnimatePresence>
           {error && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -307,7 +307,7 @@ const ImageUpload = ({
               >
                 {error}
               </Typography>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 

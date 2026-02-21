@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { Bell, BellOff, Smartphone, CheckCircle } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 const NotificationSettings = () => {
   const {
@@ -71,7 +71,7 @@ const NotificationSettings = () => {
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -256,7 +256,7 @@ const NotificationSettings = () => {
           )}
         </CardContent>
       </Card>
-    </motion.div>
+    </m.div>
   );
 };
 

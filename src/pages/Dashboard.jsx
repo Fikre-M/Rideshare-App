@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Grid, useTheme, useMediaQuery } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { PageContainer, PageHeader } from '../components/layout';
 import KPICard from '../components/dashboard/KPICard';
 import RealTimeMap from '../components/dashboard/RealTimeMap';
@@ -111,14 +111,14 @@ const Dashboard = () => {
       {/* KPI Cards */}
       <Box mb={2}>
         <SectionTitle variant="h6">Key Performance Indicators</SectionTitle>
-        <motion.div
+        <m.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           <Grid container spacing={1}>
             <Grid item xs={12} sm={12} md={3}>
-              <motion.div variants={itemVariants}>
+              <m.div variants={itemVariants}>
                 <KPICard
                   title="Total Vehicles"
                   value={dashboardData?.totalVehicles || 0}
@@ -126,10 +126,10 @@ const Dashboard = () => {
                   loading={isLoading}
                   color="primary"
                 />
-              </motion.div>
+              </m.div>
             </Grid>
             <Grid item xs={12} sm={12} md={3}>
-              <motion.div variants={itemVariants}>
+              <m.div variants={itemVariants}>
                 <KPICard
                   title="Active Drivers"
                   value={dashboardData?.activeDrivers || 0}
@@ -137,10 +137,10 @@ const Dashboard = () => {
                   loading={isLoading}
                   color="success"
                 />
-              </motion.div>
+              </m.div>
             </Grid>
             <Grid item xs={12} sm={12} md={3}>
-              <motion.div variants={itemVariants}>
+              <m.div variants={itemVariants}>
                 <KPICard
                   title="Trips Today"
                   value={dashboardData?.tripsToday || 0}
@@ -148,10 +148,10 @@ const Dashboard = () => {
                   loading={isLoading}
                   color="info"
                 />
-              </motion.div>
+              </m.div>
             </Grid>
             <Grid item xs={12} sm={12} md={3}>
-              <motion.div variants={itemVariants}>
+              <m.div variants={itemVariants}>
                 <KPICard
                   title="Avg. Wait Time"
                   value={`${dashboardData?.avgWaitTime || 0}m`}
@@ -159,10 +159,10 @@ const Dashboard = () => {
                   loading={isLoading}
                   color="warning"
                 />
-              </motion.div>
+              </m.div>
             </Grid>
             <Grid item xs={12} sm={12} md={3}>
-              <motion.div variants={itemVariants}>
+              <m.div variants={itemVariants}>
                 <KPICard
                   title="Occupancy Rate"
                   value={`${((dashboardData?.occupancyRate || 0) * 100).toFixed(1)}%`}
@@ -170,17 +170,17 @@ const Dashboard = () => {
                   loading={isLoading}
                   color="secondary"
                 />
-              </motion.div>
+              </m.div>
             </Grid>
           </Grid>
-        </motion.div>
+        </m.div>
       </Box>
 
       {/* Map and Events Row */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
           <SectionTitle variant="h6">Live Vehicle Tracking</SectionTitle>
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -194,12 +194,12 @@ const Dashboard = () => {
             >
               <RealTimeMap height={400} />
             </Box>
-          </motion.div>
+          </m.div>
         </Grid>
 
         <Grid item xs={12} md={4}>
           <SectionTitle variant="h6">Recent Events</SectionTitle>
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -232,7 +232,7 @@ const Dashboard = () => {
                 />
               </Box>
             </Paper>
-          </motion.div>
+          </m.div>
         </Grid>
       </Grid>
     </PageContainer>

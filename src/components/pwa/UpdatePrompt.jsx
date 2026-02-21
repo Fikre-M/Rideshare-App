@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { RefreshCw, X } from 'lucide-react';
 import { Snackbar, Button, IconButton } from '@mui/material';
 import { usePWA } from '../../utils/pwa';
@@ -81,7 +81,7 @@ const UpdatePrompt = () => {
       {/* Offline Ready Notification */}
       <AnimatePresence>
         {offlineReady && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
@@ -152,7 +152,7 @@ const UpdatePrompt = () => {
                 <X size={18} />
               </IconButton>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>
