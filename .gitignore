@@ -32,3 +32,4 @@ dist-ssr
 
 # Project documentation (not for git)
 PROJECT_SUMMARY.md
+.env
