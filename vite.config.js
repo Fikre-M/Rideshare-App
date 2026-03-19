@@ -86,7 +86,9 @@ export default defineConfig(({ mode }) => {
           ]
         },
         workbox: {
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MiB
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}'],
+          globIgnores: ['**/stats.html', '**/stats.*.html'],
           runtimeCaching: [
             {
               // Cache app shell with CacheFirst strategy
@@ -236,69 +238,9 @@ export default defineConfig(({ mode }) => {
 
     build: {
       sourcemap: true,
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 2000,
       rollupOptions: {
-        output: {
-          manualChunks: (id) => {
-            // Vendor chunk - React core (highest priority)
-            if (id.includes("node_modules/react/") || 
-                id.includes("node_modules/react-dom/") || 
-                id.includes("node_modules/react-router") ||
-                id.includes("node_modules/scheduler")) {
-              return "vendor";
-            }
-            
-            // Charts chunk - Recharts (before MUI to avoid circular deps)
-            if (id.includes("node_modules/recharts")) {
-              return "charts";
-            }
-            
-            // MUI chunk - Material UI components (after vendor, before charts)
-            if (id.includes("node_modules/@mui")) {
-              return "mui";
-            }
-            
-            // Emotion styling (with MUI)
-            if (id.includes("node_modules/@emotion")) {
-              return "mui";
-            }
-            
-            // Maps chunk - Mapbox and Leaflet
-            if (id.includes("node_modules/mapbox-gl") || 
-                id.includes("node_modules/leaflet") ||
-                id.includes("node_modules/react-map-gl") ||
-                id.includes("node_modules/react-leaflet")) {
-              return "maps";
-            }
-            
-            // AI chunk - OpenAI and Google AI
-            if (id.includes("node_modules/openai") || 
-                id.includes("node_modules/@google/generative-ai")) {
-              return "ai";
-            }
-            
-            // TanStack Query chunk
-            if (id.includes("node_modules/@tanstack/react-query")) {
-              return "query";
-            }
-            
-            // Framer Motion chunk
-            if (id.includes("node_modules/framer-motion")) {
-              return "motion";
-            }
-            
-            // Other large libraries
-            if (id.includes("node_modules/axios") || 
-                id.includes("node_modules/socket.io-client")) {
-              return "utils";
-            }
-            
-            // Date utilities
-            if (id.includes("node_modules/date-fns")) {
-              return "utils";
-            }
-          },
-        },
+        output: {},
       },
     },
   };
