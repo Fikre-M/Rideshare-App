@@ -28,8 +28,8 @@ import SetupRequired from "./components/onboarding/SetupRequired";
 import InstallPrompt from "./components/pwa/InstallPrompt";
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { useApiKeyStore } from "./stores/apiKeyStore";
-import config from "./config/config";
-import { queryClient } from "./lib/queryClient";
+import config from "./utils/config";
+import { queryClient } from "./utils/queryClient";
 
 // Initialize error tracking (e.g., Sentry)
 if (config.analytics.sentryDsn) {

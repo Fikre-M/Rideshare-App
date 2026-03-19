@@ -32,7 +32,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 
 // Constants
-import { DRAWER_WIDTH, DRAWER_WIDTH_COLLAPSED, HEADER_HEIGHT } from '../../constants/layout';
+import { DRAWER_WIDTH, DRAWER_WIDTH_COLLAPSED, HEADER_HEIGHT } from '../../utils/layout';
 
 const Header = ({ onDrawerToggle, onToggleCollapse, isCollapsed, drawerWidth }) => {
   const [anchorEl, setAnchorEl] = useState(null);

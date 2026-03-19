@@ -1,5 +1,5 @@
 import { Container } from '@mui/material';
-import { CONTENT_MAX_WIDTH } from '../../constants/layout';
+import { CONTENT_MAX_WIDTH } from '../../utils/layout';
 
 /**
  * PageContainer - Consistent container for page content

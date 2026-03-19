@@ -7,7 +7,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 
 // Constants
-import { DRAWER_WIDTH, DRAWER_WIDTH_COLLAPSED, HEADER_HEIGHT } from '../../constants/layout';
+import { DRAWER_WIDTH, DRAWER_WIDTH_COLLAPSED, HEADER_HEIGHT } from '../../utils/layout';
 
 const MainLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);

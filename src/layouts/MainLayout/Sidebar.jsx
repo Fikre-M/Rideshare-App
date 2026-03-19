@@ -28,7 +28,7 @@ import {
 } from '@mui/icons-material';
 
 // Constants
-import { DRAWER_WIDTH, DRAWER_WIDTH_COLLAPSED, HEADER_HEIGHT } from '../../constants/layout';
+import { DRAWER_WIDTH, DRAWER_WIDTH_COLLAPSED, HEADER_HEIGHT } from '../../utils/layout';
 
 const menuItems = [
   { 
