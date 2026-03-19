@@ -239,9 +239,10 @@ const AppRoutes = () => {
   }, []);
 
   // Show setup screen if no API keys are configured
-  if (!setupComplete && showSetupModal) {
-    return <SetupRequired />;
-  }
+  // Disabled: app works without API keys, user can configure later via Settings
+  // if (!setupComplete && showSetupModal) {
+  //   return <SetupRequired />;
+  // }
 
   // Keyboard shortcuts
   useEffect(() => {
