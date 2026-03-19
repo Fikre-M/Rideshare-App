@@ -81,19 +81,15 @@ const config = {
 // Validate required configuration
 const validateConfig = () => {
   const required = [
-    { key: 'VITE_API_URL', value: config.api.baseUrl },
     { key: 'VITE_MAPBOX_TOKEN', value: config.map.accessToken },
   ];
 
   const missing = required.filter((item) => !item.value);
 
   if (missing.length > 0) {
-    console.warn('Missing required environment variables:');
+    console.warn('Missing environment variables (some features may be unavailable):');
     missing.forEach((item) => console.warn(`- ${item.key}`));
-    
-    if (config.app.isProduction) {
-      throw new Error('Missing required environment variables');
-    }
+    // Never throw — app should still load without optional keys
   }
 };
 
