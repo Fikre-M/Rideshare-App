@@ -13,6 +13,14 @@ export default defineConfig(({ mode }) => {
       port: 8000,
       strictPort: false,
       open: true,
+      proxy: {
+        // Forward all /api/ai requests to the proxy server during development
+        '/api/ai': {
+          target: `http://localhost:${process.env.PROXY_PORT || 3001}`,
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
 
     css: {
