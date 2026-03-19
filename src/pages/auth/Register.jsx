@@ -37,7 +37,7 @@ import { styled } from "@mui/material/styles";
 import { m } from 'framer-motion';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(4),
+  padding: theme.spacing(2.5),
   borderRadius: 24,
   background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${theme.palette.background.default} 100%)`,
   backdropFilter: 'blur(20px)',
@@ -48,9 +48,9 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 const GradientButton = styled(Button)(({ theme }) => ({
   background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
   borderRadius: 12,
-  padding: theme.spacing(1.5, 4),
+  padding: theme.spacing(1, 3),
   textTransform: 'none',
-  fontSize: '1.1rem',
+  fontSize: '0.95rem',
   fontWeight: 600,
   boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
   '&:hover': {
@@ -63,7 +63,7 @@ const GradientButton = styled(Button)(({ theme }) => ({
 
 const SocialButton = styled(Button)(({ theme }) => ({
   borderRadius: 12,
-  padding: theme.spacing(1.5),
+  padding: theme.spacing(0.75),
   border: `2px solid ${theme.palette.divider}`,
   backgroundColor: theme.palette.background.paper,
   '&:hover': {
@@ -74,7 +74,7 @@ const SocialButton = styled(Button)(({ theme }) => ({
 }));
 
 const RoleCard = styled(Paper)(({ theme, selected }) => ({
-  padding: theme.spacing(3),
+  padding: theme.spacing(2),
   textAlign: 'center',
   cursor: 'pointer',
   borderRadius: 16,
@@ -183,10 +183,10 @@ const Register = () => {
       case 0:
         return (
           <Box>
-            <Typography variant="h5" gutterBottom align="center" sx={{ mb: 4 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ mb: 2 }}>
               Choose Your Account Type
             </Typography>
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
               {roleOptions.map((option) => (
                 <Grid item xs={12} md={4} key={option.value}>
                   <m.div
@@ -200,15 +200,15 @@ const Register = () => {
                       <Avatar
                         sx={{
                           bgcolor: `${option.color}.main`,
-                          width: 64,
-                          height: 64,
+                          width: 48,
+                          height: 48,
                           mx: 'auto',
-                          mb: 2,
+                          mb: 1,
                         }}
                       >
                         {option.icon}
                       </Avatar>
-                      <Typography variant="h6" gutterBottom>
+                      <Typography variant="subtitle1" gutterBottom>
                         {option.label}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -225,11 +225,11 @@ const Register = () => {
       case 1:
         return (
           <Box>
-            <Typography variant="h5" gutterBottom align="center" sx={{ mb: 4 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ mb: 2 }}>
               Personal Information
             </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   label="Full Name"
@@ -237,10 +237,11 @@ const Register = () => {
                   onChange={handleInputChange("name")}
                   variant="outlined"
                   required
+                  size="small"
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   label="Email Address"
@@ -249,6 +250,7 @@ const Register = () => {
                   onChange={handleInputChange("email")}
                   variant="outlined"
                   required
+                  size="small"
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
               </Grid>
@@ -261,12 +263,14 @@ const Register = () => {
                   onChange={handleInputChange("password")}
                   variant="outlined"
                   required
+                  size="small"
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
                           onClick={() => setShowPassword(!showPassword)}
                           edge="end"
+                          size="small"
                         >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
@@ -285,12 +289,14 @@ const Register = () => {
                   onChange={handleInputChange("confirmPassword")}
                   variant="outlined"
                   required
+                  size="small"
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           edge="end"
+                          size="small"
                         >
                           {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
@@ -307,6 +313,7 @@ const Register = () => {
                   value={formData.phone}
                   onChange={handleInputChange("phone")}
                   variant="outlined"
+                  size="small"
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
               </Grid>
@@ -319,6 +326,7 @@ const Register = () => {
                       value={formData.vehicle}
                       onChange={handleInputChange("vehicle")}
                       variant="outlined"
+                      size="small"
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -329,6 +337,7 @@ const Register = () => {
                       value={formData.licensePlate}
                       onChange={handleInputChange("licensePlate")}
                       variant="outlined"
+                      size="small"
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -344,28 +353,28 @@ const Register = () => {
             <Avatar
               sx={{
                 bgcolor: 'success.main',
-                width: 80,
-                height: 80,
+                width: 56,
+                height: 56,
                 mx: 'auto',
-                mb: 3,
+                mb: 1.5,
               }}
             >
-              <RegisterIcon sx={{ fontSize: 40 }} />
+              <RegisterIcon sx={{ fontSize: 28 }} />
             </Avatar>
-            <Typography variant="h5" gutterBottom>
+            <Typography variant="h6" gutterBottom>
               Ready to Join AI Rideshare!
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Review your information and complete your registration
             </Typography>
-            <Paper sx={{ p: 3, textAlign: 'left', mb: 3 }}>
-              <Typography variant="h6" gutterBottom>Account Summary</Typography>
-              <Typography><strong>Name:</strong> {formData.name}</Typography>
-              <Typography><strong>Email:</strong> {formData.email}</Typography>
-              <Typography><strong>Role:</strong> {roleOptions.find(r => r.value === formData.role)?.label}</Typography>
-              {formData.phone && <Typography><strong>Phone:</strong> {formData.phone}</Typography>}
+            <Paper sx={{ p: 2, textAlign: 'left', mb: 2 }}>
+              <Typography variant="subtitle2" gutterBottom fontWeight="bold">Account Summary</Typography>
+              <Typography variant="body2"><strong>Name:</strong> {formData.name}</Typography>
+              <Typography variant="body2"><strong>Email:</strong> {formData.email}</Typography>
+              <Typography variant="body2"><strong>Role:</strong> {roleOptions.find(r => r.value === formData.role)?.label}</Typography>
+              {formData.phone && <Typography variant="body2"><strong>Phone:</strong> {formData.phone}</Typography>}
               {formData.role === "driver" && formData.vehicle && (
-                <Typography><strong>Vehicle:</strong> {formData.vehicle}</Typography>
+                <Typography variant="body2"><strong>Vehicle:</strong> {formData.vehicle}</Typography>
               )}
             </Paper>
           </Box>
@@ -383,7 +392,7 @@ const Register = () => {
         background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
         display: "flex",
         alignItems: "center",
-        py: 4,
+        py: 2,
       }}
     >
       <Container maxWidth="md">
@@ -393,27 +402,27 @@ const Register = () => {
           transition={{ duration: 0.6 }}
         >
           <StyledPaper>
-            <Box textAlign="center" mb={4}>
+            <Box textAlign="center" mb={2}>
               <Avatar
                 sx={{
                   bgcolor: 'primary.main',
-                  width: 64,
-                  height: 64,
+                  width: 48,
+                  height: 48,
                   mx: 'auto',
-                  mb: 2,
+                  mb: 1,
                 }}
               >
-                <RegisterIcon sx={{ fontSize: 32 }} />
+                <RegisterIcon sx={{ fontSize: 24 }} />
               </Avatar>
-              <Typography variant="h4" gutterBottom fontWeight="bold">
+              <Typography variant="h5" gutterBottom fontWeight="bold">
                 Join AI Rideshare
               </Typography>
-              <Typography variant="body1" color="text.secondary">
+              <Typography variant="body2" color="text.secondary">
                 Experience the future of transportation
               </Typography>
             </Box>
 
-            <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+            <Stepper activeStep={activeStep} sx={{ mb: 2 }}>
               {steps.map((label) => (
                 <Step key={label}>
                   <StepLabel>{label}</StepLabel>
@@ -422,7 +431,7 @@ const Register = () => {
             </Stepper>
 
             {error && (
-              <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+              <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
                 {error}
               </Alert>
             )}
@@ -430,7 +439,7 @@ const Register = () => {
             <form onSubmit={handleSubmit}>
               {renderStepContent(activeStep)}
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
                 <Button
                   disabled={activeStep === 0}
                   onClick={handleBack}
@@ -461,13 +470,13 @@ const Register = () => {
 
             {activeStep === 0 && (
               <>
-                <Divider sx={{ my: 4 }}>
+                <Divider sx={{ my: 2 }}>
                   <Typography variant="body2" color="text.secondary">
                     Or continue with
                   </Typography>
                 </Divider>
 
-                <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid container spacing={2} sx={{ mb: 2 }}>
                   <Grid item xs={4}>
                     <SocialButton fullWidth startIcon={<GoogleIcon />}>
                       Google
@@ -487,7 +496,7 @@ const Register = () => {
               </>
             )}
 
-            <Box textAlign="center" mt={3}>
+            <Box textAlign="center" mt={2}>
               <Typography variant="body2" color="text.secondary">
                 Already have an account?{" "}
                 <Link

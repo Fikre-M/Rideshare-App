@@ -32,7 +32,7 @@ import LocalTaxiIcon from "@mui/icons-material/LocalTaxi";
 
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(4),
+  padding: theme.spacing(2.5),
   borderRadius: 24,
   background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${theme.palette.background.default} 100%)`,
   backdropFilter: 'blur(20px)',
@@ -43,9 +43,9 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 const GradientButton = styled(Button)(({ theme }) => ({
   background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
   borderRadius: 12,
-  padding: theme.spacing(1.5, 4),
+  padding: theme.spacing(1, 3),
   textTransform: 'none',
-  fontSize: '1.1rem',
+  fontSize: '0.95rem',
   fontWeight: 600,
   boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
   '&:hover': {
@@ -58,7 +58,7 @@ const GradientButton = styled(Button)(({ theme }) => ({
 
 const SocialButton = styled(Button)(({ theme }) => ({
   borderRadius: 12,
-  padding: theme.spacing(1.5),
+  padding: theme.spacing(0.75),
   border: `2px solid ${theme.palette.divider}`,
   backgroundColor: theme.palette.background.paper,
   '&:hover': {
@@ -69,7 +69,7 @@ const SocialButton = styled(Button)(({ theme }) => ({
 }));
 
 const DemoCard = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(2),
+  padding: theme.spacing(1),
   borderRadius: 12,
   backgroundColor: theme.palette.background.default,
   border: `1px solid ${theme.palette.divider}`,
@@ -146,7 +146,7 @@ const Login = () => {
         background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
         display: "flex",
         alignItems: "center",
-        py: 4,
+        py: 2,
       }}
     >
       <Container maxWidth="lg">
@@ -159,22 +159,22 @@ const Login = () => {
               transition={{ duration: 0.6 }}
             >
               <StyledPaper>
-                <Box textAlign="center" mb={4}>
+                <Box textAlign="center" mb={2}>
                   <Avatar
                     sx={{
                       bgcolor: "primary.main",
-                      width: 64,
-                      height: 64,
+                      width: 48,
+                      height: 48,
                       mx: "auto",
-                      mb: 2,
+                      mb: 1,
                     }}
                   >
                     {/* <LoginIcon sx={{ fontSize: 32 }} /> */}
                   </Avatar>
-                  <Typography variant="h4" gutterBottom fontWeight="bold">
+                  <Typography variant="h5" gutterBottom fontWeight="bold">
                     Welcome Back
                   </Typography>
-                  <Typography variant="body1" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary">
                     Sign in to your AI Rideshare account
                   </Typography>
                 </Box>
@@ -186,52 +186,54 @@ const Login = () => {
                 )}
 
                 <form onSubmit={handleSubmit}>
-                  <TextField
-                    fullWidth
-                    label="Email Address"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange("email")}
-                    variant="outlined"
-                    required
-                    sx={{
-                      mb: 3,
-                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                    }}
-                  />
-
-                  <TextField
-                    fullWidth
-                    label="Password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleInputChange("password")}
-                    variant="outlined"
-                    required
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() => setShowPassword(!showPassword)}
-                            edge="end"
-                          >
-                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      mb: 3,
-                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                    }}
-                  />
+                  <Grid container spacing={1.5} sx={{ mb: 1.5 }}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Email Address"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange("email")}
+                        variant="outlined"
+                        required
+                        size="small"
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Password"
+                        type={showPassword ? "text" : "password"}
+                        value={formData.password}
+                        onChange={handleInputChange("password")}
+                        variant="outlined"
+                        required
+                        size="small"
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={() => setShowPassword(!showPassword)}
+                                edge="end"
+                                size="small"
+                              >
+                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                      />
+                    </Grid>
+                  </Grid>
 
                   <Box
                     sx={{
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      mb: 3,
+                      mb: 1.5,
                     }}
                   >
                     <FormControlLabel
@@ -261,19 +263,19 @@ const Login = () => {
                     fullWidth
                     disabled={isLoading}
                     startIcon={<LoginIcon />}
-                    sx={{ mb: 3 }}
+                    sx={{ mb: 1.5 }}
                   >
                     {isLoading ? "Signing In..." : "Sign In"}
                   </GradientButton>
                 </form>
 
-                <Divider sx={{ my: 3 }}>
+                <Divider sx={{ my: 1.5 }}>
                   <Typography variant="body2" color="text.secondary">
                     Or continue with
                   </Typography>
                 </Divider>
 
-                <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid container spacing={1} sx={{ mb: 1.5 }}>
                   <Grid item xs={4}>
                     <SocialButton fullWidth startIcon={<GoogleIcon />}>
                       Google
@@ -291,7 +293,7 @@ const Login = () => {
                   </Grid>
                 </Grid>
 
-                <Box textAlign="center" mb={3}>
+                <Box textAlign="center" mb={1.5}>
                   <Typography variant="body2" color="text.secondary">
                     Don't have an account?{" "}
                     <Link
@@ -307,40 +309,41 @@ const Login = () => {
                   </Typography>
                 </Box>
 
-                <Divider sx={{ my: 3 }}>
+                <Divider sx={{ my: 1.5 }}>
                   <Typography variant="body2" color="text.secondary">
                     Demo Accounts
                   </Typography>
                 </Divider>
 
-                <Grid container spacing={2}>
+                <Grid container spacing={1}>
                   {demoAccounts.map((account, index) => (
-                    <Grid item xs={12} key={index}>
+                    <Grid item xs={4} key={index}>
                       <DemoCard
                         onClick={() =>
                           handleDemoLogin(account.email, account.password)
                         }
                       >
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
                           <Avatar
                             sx={{
                               bgcolor: `${account.color}.main`,
-                              width: 40,
-                              height: 40,
-                              mr: 2,
+                              width: 32,
+                              height: 32,
                             }}
                           >
                             {account.name.charAt(0)}
                           </Avatar>
-                          <Box>
-                            <Typography variant="subtitle2" fontWeight="bold">
+                          <Box textAlign="center">
+                            <Typography variant="caption" fontWeight="bold" display="block">
                               {account.name}
                             </Typography>
                             <Typography
                               variant="caption"
                               color="text.secondary"
+                              display="block"
+                              sx={{ fontSize: '0.65rem' }}
                             >
-                              {account.role} • Click to login
+                              {account.role}
                             </Typography>
                           </Box>
                         </Box>
