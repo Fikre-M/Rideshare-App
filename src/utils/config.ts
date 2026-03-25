@@ -1,10 +1,61 @@
-// @ts-nocheck
 /**
  * Application configuration using environment variables
  * Provides type-safe access to environment configuration
  */
 
-const config = {
+interface AppConfig {
+  app: {
+    name: string;
+    version: string;
+    environment: string;
+    isProduction: boolean;
+    isDevelopment: boolean;
+  };
+  api: {
+    baseUrl: string;
+    wsUrl: string;
+    timeout: number;
+    cacheEnabled: boolean;
+    cacheTTL: number;
+  };
+  auth: {
+    tokenKey: string;
+    refreshTokenKey: string;
+    tokenExpiryKey: string;
+  };
+  ai: {
+    apiUrl: string;
+    openAIApiKey: string;
+    model: string;
+  };
+  map: {
+    accessToken: string;
+    style: string;
+    defaultCenter: { lat: number; lng: number };
+    defaultZoom: number;
+  };
+  payment: {
+    stripePublicKey: string;
+    stripeSecretKey: string;
+    currency: string;
+  };
+  analytics: {
+    sentryDsn: string;
+    googleAnalyticsId: string;
+    logLevel: string;
+  };
+  features: {
+    aiAssistant: boolean;
+    realTimeTracking: boolean;
+    offlineMode: boolean;
+  };
+  security: {
+    cspEnabled: boolean;
+    rateLimit: { requests: number; window: number };
+  };
+}
+
+const config: AppConfig = {
   // App Info
   app: {
     name: import.meta.env.VITE_APP_NAME || 'AI Rideshare Platform',

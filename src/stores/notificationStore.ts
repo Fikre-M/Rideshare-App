@@ -1,41 +1,67 @@
-// @ts-nocheck
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export const useNotificationStore = create(
+type NotificationPermission = 'default' | 'granted' | 'denied';
+
+interface NotificationHistoryItem {
+  id: number;
+  title: string;
+  body: string | undefined;
+  timestamp: string;
+}
+
+interface NotificationOptions {
+  body?: string;
+  tag?: string;
+  requireInteraction?: boolean;
+  actions?: Array<{ action: string; title: string }>;
+  data?: Record<string, unknown>;
+  vibrate?: number[];
+  icon?: string;
+  badge?: string;
+  [key: string]: unknown;
+}
+
+interface NotificationState {
+  permission: NotificationPermission;
+  enabled: boolean;
+  hasRequestedPermission: boolean;
+  notificationHistory: NotificationHistoryItem[];
+  setPermission: (permission: NotificationPermission) => void;
+  setEnabled: (enabled: boolean) => void;
+  setHasRequestedPermission: (hasRequested: boolean) => void;
+  requestPermission: () => Promise<boolean>;
+  showNotification: (title: string, options?: NotificationOptions) => Promise<Notification | null>;
+  clearHistory: () => void;
+  initialize: () => void;
+}
+
+export const useNotificationStore = create<NotificationState>()(
   persist(
     (set, get) => ({
-      // State
-      permission: 'default', // 'default' | 'granted' | 'denied'
+      permission: 'default',
       enabled: false,
       hasRequestedPermission: false,
       notificationHistory: [],
 
-      // Actions
       setPermission: (permission) => set({ permission }),
-      
       setEnabled: (enabled) => set({ enabled }),
-      
-      setHasRequestedPermission: (hasRequested) => 
-        set({ hasRequestedPermission: hasRequested }),
+      setHasRequestedPermission: (hasRequested) => set({ hasRequestedPermission: hasRequested }),
 
-      // Request notification permission
       requestPermission: async () => {
         if (!('Notification' in window)) {
           console.warn('This browser does not support notifications');
           return false;
         }
-
         if (get().hasRequestedPermission) {
           return get().permission === 'granted';
         }
-
         try {
           const permission = await Notification.requestPermission();
-          set({ 
-            permission, 
+          set({
+            permission: permission as NotificationPermission,
             enabled: permission === 'granted',
-            hasRequestedPermission: true 
+            hasRequestedPermission: true
           });
           return permission === 'granted';
         } catch (error) {
@@ -44,60 +70,43 @@ export const useNotificationStore = create(
         }
       },
 
-      // Show a notification
       showNotification: async (title, options = {}) => {
         const state = get();
-        
         if (!state.enabled || state.permission !== 'granted') {
           console.warn('Notifications are not enabled or permission not granted');
           return null;
         }
-
         try {
-          // If service worker is available, use it
+          const addToHistory = () => {
+            set((s) => ({
+              notificationHistory: [
+                {
+                  id: Date.now(),
+                  title,
+                  body: options.body,
+                  timestamp: new Date().toISOString(),
+                },
+                ...s.notificationHistory.slice(0, 49),
+              ],
+            }));
+          };
+
           if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
             const registration = await navigator.serviceWorker.ready;
-            const notification = await registration.showNotification(title, {
+            await registration.showNotification(title, {
               icon: '/icons/icon-192x192.png',
               badge: '/icons/icon-192x192.png',
               vibrate: [200, 100, 200],
               ...options,
             });
-
-            // Add to history
-            set((state) => ({
-              notificationHistory: [
-                {
-                  id: Date.now(),
-                  title,
-                  body: options.body,
-                  timestamp: new Date().toISOString(),
-                },
-                ...state.notificationHistory.slice(0, 49), // Keep last 50
-              ],
-            }));
-
-            return notification;
+            addToHistory();
+            return null;
           } else {
-            // Fallback to regular notification
             const notification = new Notification(title, {
               icon: '/icons/icon-192x192.png',
               ...options,
             });
-
-            // Add to history
-            set((state) => ({
-              notificationHistory: [
-                {
-                  id: Date.now(),
-                  title,
-                  body: options.body,
-                  timestamp: new Date().toISOString(),
-                },
-                ...state.notificationHistory.slice(0, 49),
-              ],
-            }));
-
+            addToHistory();
             return notification;
           }
         } catch (error) {
@@ -106,13 +115,11 @@ export const useNotificationStore = create(
         }
       },
 
-      // Clear notification history
       clearHistory: () => set({ notificationHistory: [] }),
 
-      // Initialize - check current permission
       initialize: () => {
         if ('Notification' in window) {
-          set({ permission: Notification.permission });
+          set({ permission: Notification.permission as NotificationPermission });
         }
       },
     }),
@@ -127,7 +134,6 @@ export const useNotificationStore = create(
   )
 );
 
-// Initialize on load
 if (typeof window !== 'undefined') {
   useNotificationStore.getState().initialize();
 }

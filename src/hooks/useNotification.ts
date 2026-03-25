@@ -1,12 +1,17 @@
-// @ts-nocheck
 import { useCallback } from 'react';
-import { useSnackbar } from 'notistack';
+import { useSnackbar, OptionsObject } from 'notistack';
+
+interface NotificationOptions extends Omit<OptionsObject, 'variant'> {
+  variant?: 'default' | 'error' | 'success' | 'warning' | 'info';
+  autoHideDuration?: number;
+  persist?: boolean;
+}
 
 const useNotification = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const showNotification = useCallback(
-    (message, options = {}) => {
+    (message: string, options: NotificationOptions = {}) => {
       const {
         variant = 'default',
         autoHideDuration = 3000,
@@ -24,28 +29,28 @@ const useNotification = () => {
   );
 
   const showSuccess = useCallback(
-    (message, options = {}) => {
+    (message: string, options: NotificationOptions = {}) => {
       showNotification(message, { variant: 'success', ...options });
     },
     [showNotification]
   );
 
   const showError = useCallback(
-    (message, options = {}) => {
+    (message: string, options: NotificationOptions = {}) => {
       showNotification(message, { variant: 'error', ...options });
     },
     [showNotification]
   );
 
   const showWarning = useCallback(
-    (message, options = {}) => {
+    (message: string, options: NotificationOptions = {}) => {
       showNotification(message, { variant: 'warning', ...options });
     },
     [showNotification]
   );
 
   const showInfo = useCallback(
-    (message, options = {}) => {
+    (message: string, options: NotificationOptions = {}) => {
       showNotification(message, { variant: 'info', ...options });
     },
     [showNotification]

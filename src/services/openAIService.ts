@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * OpenAI Service — routes all requests through the server-side proxy.
  * API keys never touch the browser.
@@ -7,55 +6,130 @@ import aiBudgetGuard from './aiBudgetGuard';
 
 const PROXY_BASE = import.meta.env.VITE_AI_PROXY_URL || '/api/ai';
 
-class OpenAIService {
-  constructor() {
-    this.tokenUsage = { total: 0, byFeature: {} };
-    this.budgetGuard = aiBudgetGuard;
-  }
+interface TokenUsage {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+}
 
-  // ── Budget helpers ──────────────────────────────────────────────────────────
-  canMakeRequest() {
+interface TokenUsageSummary {
+  total: number;
+  byFeature: Record<string, number>;
+}
+
+interface ChatPayload {
+  model: string;
+  messages: Array<{ role: string; content: string }>;
+  response_format?: { type: string };
+  temperature?: number;
+  stream?: boolean;
+  max_tokens?: number;
+}
+
+interface ChatCompletion {
+  choices: Array<{ message: { content: string } }>;
+  usage: TokenUsage;
+}
+
+interface MatchResult {
+  matches: unknown[];
+  tokenUsage: TokenUsage;
+  timestamp: string;
+}
+
+interface PricingResult {
+  surgeMultiplier: number;
+  finalPrice: number;
+  confidence: number;
+  breakdown: Record<string, unknown>;
+  reasoning: string;
+  recommendations: string[];
+  tokenUsage: TokenUsage;
+  timestamp: string;
+}
+
+interface RouteResult {
+  recommendedRouteIndex: number;
+  reasoning: string;
+  comparison: unknown;
+  estimatedSavings: unknown;
+  warnings: string[];
+  alternativeRoute: unknown;
+  tokenUsage: TokenUsage;
+  timestamp: string;
+}
+
+interface DemandResult {
+  predictions: unknown[];
+  peakHours: number[];
+  insights: string[];
+  recommendations: string[];
+  chartData: unknown;
+  tokenUsage: TokenUsage;
+  timestamp: string;
+}
+
+interface AnalyticsResult {
+  revenueForecast: unknown;
+  demandTrends: unknown;
+  driverUtilization: unknown;
+  anomalies: unknown[];
+  insights: string[];
+  recommendations: string[];
+  riskFactors: unknown[];
+  opportunities: unknown[];
+  kpis: unknown;
+  tokenUsage: TokenUsage;
+  timestamp: string;
+}
+
+interface StreamOptions {
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+class OpenAIService {
+  private tokenUsage: TokenUsageSummary = { total: 0, byFeature: {} };
+  private budgetGuard = aiBudgetGuard;
+
+  canMakeRequest(): boolean {
     return this.budgetGuard.canMakeRequest();
   }
 
-  trackTokenUsage(feature, usage) {
+  trackTokenUsage(feature: string, usage: TokenUsage | undefined): void {
     if (!usage) return;
-    const tokens = usage.total_tokens || 0;
+    const tokens = usage.total_tokens ?? 0;
     this.tokenUsage.total += tokens;
-    this.tokenUsage.byFeature[feature] = (this.tokenUsage.byFeature[feature] || 0) + tokens;
+    this.tokenUsage.byFeature[feature] = (this.tokenUsage.byFeature[feature] ?? 0) + tokens;
     this.budgetGuard.trackUsage(feature, usage);
   }
 
-  getTokenUsage() {
+  getTokenUsage(): TokenUsageSummary {
     return { ...this.tokenUsage };
   }
 
-  resetTokenUsage() {
+  resetTokenUsage(): void {
     this.tokenUsage = { total: 0, byFeature: {} };
   }
 
-  // ── Core proxy call ─────────────────────────────────────────────────────────
-  async _chat(payload) {
+  private async _chat(payload: ChatPayload): Promise<ChatCompletion> {
     if (!this.canMakeRequest()) {
       throw new Error('AI budget limit exceeded. Please reset or increase your budget limit.');
     }
-
     const res = await fetch(`${PROXY_BASE}/openai/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(err.error || `Proxy error ${res.status}`);
+      const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
+      throw new Error(err.error ?? `Proxy error ${res.status}`);
     }
-
-    return res.json();
+    return res.json() as Promise<ChatCompletion>;
   }
 
-  // ── Smart Matching ──────────────────────────────────────────────────────────
-  async matchDriverToPassenger(drivers, passengerPreferences) {
+  async matchDriverToPassenger(drivers: unknown[], passengerPreferences: unknown): Promise<MatchResult> {
     const prompt = `You are an AI rideshare matching system. Analyze the following drivers and passenger preferences to recommend the best matches.
 
 DRIVERS:
@@ -87,24 +161,23 @@ Return ONLY valid JSON, no additional text.`;
     });
 
     this.trackTokenUsage('smart_matching', completion.usage);
-    const result = JSON.parse(completion.choices[0].message.content);
-    return { matches: result.matches || result, tokenUsage: completion.usage, timestamp: new Date().toISOString() };
+    const result = JSON.parse(completion.choices[0].message.content) as { matches?: unknown[] };
+    return { matches: result.matches ?? (result as unknown as unknown[]), tokenUsage: completion.usage, timestamp: new Date().toISOString() };
   }
 
-  // ── Dynamic Pricing ─────────────────────────────────────────────────────────
-  async calculateDynamicPricing(pricingContext) {
+  async calculateDynamicPricing(pricingContext: Record<string, unknown>): Promise<PricingResult> {
     const prompt = `You are an AI dynamic pricing system for a rideshare platform. Calculate the optimal surge multiplier based on current conditions.
 
 PRICING CONTEXT:
-- Base Price: ${pricingContext.basePrice || 8.50}
-- Current Demand Level: ${pricingContext.demandLevel || 'medium'}
-- Weather: ${pricingContext.weather || 'clear'}
-- Time of Day: ${pricingContext.timeOfDay || new Date().toLocaleTimeString()}
-- Day of Week: ${pricingContext.dayOfWeek || new Date().toLocaleDateString('en-US', { weekday: 'long' })}
-- Active Events: ${pricingContext.events || 'none'}
-- Traffic Conditions: ${pricingContext.traffic || 'moderate'}
-- Available Drivers: ${pricingContext.availableDrivers || 'unknown'}
-- Pending Requests: ${pricingContext.pendingRequests || 'unknown'}
+- Base Price: ${pricingContext.basePrice ?? 8.50}
+- Current Demand Level: ${pricingContext.demandLevel ?? 'medium'}
+- Weather: ${pricingContext.weather ?? 'clear'}
+- Time of Day: ${pricingContext.timeOfDay ?? new Date().toLocaleTimeString()}
+- Day of Week: ${pricingContext.dayOfWeek ?? new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+- Active Events: ${pricingContext.events ?? 'none'}
+- Traffic Conditions: ${pricingContext.traffic ?? 'moderate'}
+- Available Drivers: ${pricingContext.availableDrivers ?? 'unknown'}
+- Pending Requests: ${pricingContext.pendingRequests ?? 'unknown'}
 
 Return JSON with: surgeMultiplier (1.0-3.0), finalPrice, confidence (0-100), breakdown, reasoning, recommendations.
 Return ONLY valid JSON.`;
@@ -120,12 +193,11 @@ Return ONLY valid JSON.`;
     });
 
     this.trackTokenUsage('dynamic_pricing', completion.usage);
-    const result = JSON.parse(completion.choices[0].message.content);
+    const result = JSON.parse(completion.choices[0].message.content) as Omit<PricingResult, 'tokenUsage' | 'timestamp'>;
     return { ...result, tokenUsage: completion.usage, timestamp: new Date().toISOString() };
   }
 
-  // ── Route Optimization ──────────────────────────────────────────────────────
-  async optimizeRoute(routeOptions, userPreferences) {
+  async optimizeRoute(routeOptions: unknown[], userPreferences: unknown): Promise<RouteResult> {
     const prompt = `You are an AI route optimization system. Analyze the following route options and recommend the best one.
 
 ROUTE OPTIONS:
@@ -148,24 +220,23 @@ Return ONLY valid JSON.`;
     });
 
     this.trackTokenUsage('route_optimization', completion.usage);
-    const result = JSON.parse(completion.choices[0].message.content);
+    const result = JSON.parse(completion.choices[0].message.content) as Omit<RouteResult, 'tokenUsage' | 'timestamp'>;
     return { ...result, tokenUsage: completion.usage, timestamp: new Date().toISOString() };
   }
 
-  // ── Demand Prediction ───────────────────────────────────────────────────────
-  async predictDemand(demandContext) {
+  async predictDemand(demandContext: Record<string, unknown>): Promise<DemandResult> {
     const currentTime = new Date();
     const prompt = `You are an AI demand forecasting system. Predict ride demand for the next 6 hours.
 
 CURRENT CONTEXT:
 - Current Time: ${currentTime.toLocaleString()}
 - Day of Week: ${currentTime.toLocaleDateString('en-US', { weekday: 'long' })}
-- Weather: ${demandContext.weather || 'clear'}
-- Temperature: ${demandContext.temperature || 'moderate'}
-- Local Events: ${demandContext.events || 'none'}
-- Historical Pattern: ${demandContext.historicalPattern || 'typical weekday'}
-- Current Demand: ${demandContext.currentDemand || 'medium'}
-- Location: ${demandContext.location || 'city center'}
+- Weather: ${demandContext.weather ?? 'clear'}
+- Temperature: ${demandContext.temperature ?? 'moderate'}
+- Local Events: ${demandContext.events ?? 'none'}
+- Historical Pattern: ${demandContext.historicalPattern ?? 'typical weekday'}
+- Current Demand: ${demandContext.currentDemand ?? 'medium'}
+- Location: ${demandContext.location ?? 'city center'}
 
 Return JSON with: predictions (array of 6 hourly items), peakHours, insights, recommendations, chartData.
 Return ONLY valid JSON.`;
@@ -181,19 +252,18 @@ Return ONLY valid JSON.`;
     });
 
     this.trackTokenUsage('demand_prediction', completion.usage);
-    const result = JSON.parse(completion.choices[0].message.content);
+    const result = JSON.parse(completion.choices[0].message.content) as Omit<DemandResult, 'tokenUsage' | 'timestamp'>;
     return { ...result, tokenUsage: completion.usage, timestamp: new Date().toISOString() };
   }
 
-  // ── Predictive Analytics ────────────────────────────────────────────────────
-  async getPredictiveAnalytics(analyticsContext) {
+  async getPredictiveAnalytics(analyticsContext: Record<string, unknown>): Promise<AnalyticsResult> {
     const prompt = `You are an AI business analytics system for a rideshare platform.
 
 CURRENT METRICS:
-${JSON.stringify(analyticsContext.currentMetrics || {}, null, 2)}
+${JSON.stringify(analyticsContext.currentMetrics ?? {}, null, 2)}
 
 HISTORICAL DATA (last 30 days):
-${JSON.stringify(analyticsContext.historicalData || {}, null, 2)}
+${JSON.stringify(analyticsContext.historicalData ?? {}, null, 2)}
 
 Return JSON with: revenueForecast, demandTrends, driverUtilization, anomalies, insights, recommendations, riskFactors, opportunities, kpis.
 Return ONLY valid JSON.`;
@@ -209,12 +279,14 @@ Return ONLY valid JSON.`;
     });
 
     this.trackTokenUsage('predictive_analytics', completion.usage);
-    const result = JSON.parse(completion.choices[0].message.content);
+    const result = JSON.parse(completion.choices[0].message.content) as Omit<AnalyticsResult, 'tokenUsage' | 'timestamp'>;
     return { ...result, tokenUsage: completion.usage, timestamp: new Date().toISOString() };
   }
 
-  // ── Streaming Chat ──────────────────────────────────────────────────────────
-  async *streamChatCompletion(messages, options = {}) {
+  async *streamChatCompletion(
+    messages: Array<{ role: string; content: string }>,
+    options: StreamOptions = {}
+  ): AsyncGenerator<string> {
     if (!this.canMakeRequest()) {
       throw new Error('AI budget limit exceeded. Please reset or increase your budget limit.');
     }
@@ -223,32 +295,31 @@ Return ONLY valid JSON.`;
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: options.model || 'gpt-4o',
+        model: options.model ?? 'gpt-4o',
         messages,
         stream: true,
-        temperature: options.temperature || 0.7,
-        max_tokens: options.maxTokens || 1000,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens ?? 1000,
       }),
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(err.error || `Proxy error ${res.status}`);
+      const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
+      throw new Error(err.error ?? `Proxy error ${res.status}`);
     }
 
-    const reader = res.body.getReader();
+    const reader = res.body!.getReader();
     const decoder = new TextDecoder();
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
       const lines = decoder.decode(value).split('\n').filter(Boolean);
       for (const line of lines) {
         if (line.startsWith('data: ') && line !== 'data: [DONE]') {
           try {
-            const { content } = JSON.parse(line.slice(6));
-            if (content) yield content;
+            const parsed = JSON.parse(line.slice(6)) as { content?: string };
+            if (parsed.content) yield parsed.content;
           } catch {
             // skip malformed chunks
           }

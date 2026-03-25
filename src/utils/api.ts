@@ -1,10 +1,9 @@
-// @ts-nocheck
-import axios from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { toast } from 'react-hot-toast';
 import config from '../utils/config';
 
 // Create axios instance with default config
-const api = axios.create({
+const api: AxiosInstance = axios.create({
   baseURL: config.api.baseUrl,
   timeout: config.api.timeout,
   headers: {
@@ -12,38 +11,28 @@ const api = axios.create({
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   },
-  withCredentials: false, // Set to true if using cookies for auth
+  withCredentials: false,
 });
 
 /**
  * Request interceptor for API calls
  */
 api.interceptors.request.use(
-  (config) => {
-    // Get auth token from storage
+  (reqConfig: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem(config.auth.tokenKey);
-    
-    // If token exists, add it to the headers
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      reqConfig.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // Add request timestamp for debugging
-    config.headers['X-Request-Timestamp'] = new Date().toISOString();
-    
-    // Log request in development
-    // if (import.meta.env.DEV) {
+    reqConfig.headers['X-Request-Timestamp'] = new Date().toISOString();
     if (process.env.NODE_ENV === "development") {
-      console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`, {
-        params: config.params,
-        data: config.data,
+      console.log(`[API] ${reqConfig.method?.toUpperCase()} ${reqConfig.url}`, {
+        params: reqConfig.params,
+        data: reqConfig.data,
       });
     }
-    
-    return config;
+    return reqConfig;
   },
-  (error) => {
-    // if (import.meta.env.DEV) {
+  (error: unknown) => {
     if (process.env.NODE_ENV === "development") {
       console.error("[API] Request Error:", error);
     }
@@ -55,69 +44,48 @@ api.interceptors.request.use(
  * Response interceptor for API calls
  */
 api.interceptors.response.use(
-  (response) => {
-    // Log successful responses in development
-    // if (import.meta.env.DEV) {
+  (response: AxiosResponse) => {
     if (process.env.NODE_ENV === "development") {
       console.log(
         `[API] ${response.config.method?.toUpperCase()} ${response.config.url}`,
-        {
-          status: response.status,
-          data: response.data,
-        },
+        { status: response.status, data: response.data },
       );
     }
-    
-    // Return only the data from the response
     return response.data;
   },
-  (error) => {
-    const { response, config } = error;
+  (error: any) => {
+    const { response, config: errConfig } = error;
     const errorMessage = response?.data?.message || error.message || 'An error occurred';
-    const status = response?.status;
-    
-    // Log error in development
-    // if (import.meta.env.DEV) {
+    const status: number | undefined = response?.status;
+
     if (process.env.NODE_ENV === "development") {
       console.error("[API] Response Error:", {
-        url: config?.url,
+        url: errConfig?.url,
         status,
         error: errorMessage,
         response: response?.data,
       });
     }
-    
-    // Handle specific HTTP status codes
+
     if (status === 401) {
-      // Handle unauthorized access
       localStorage.removeItem(config.auth.tokenKey);
       localStorage.removeItem(config.auth.refreshTokenKey);
-      
-      // Only redirect if not already on the login page
       if (!window.location.pathname.includes('/login')) {
         window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
       }
-      
-      // Show error toast
       toast.error('Your session has expired. Please log in again.');
     } else if (status === 403) {
-      // Handle forbidden access
       toast.error('You do not have permission to perform this action.');
     } else if (status === 404) {
-      // Handle not found
       toast.error('The requested resource was not found.');
     } else if (status === 429) {
-      // Handle rate limiting
       toast.error('Too many requests. Please try again later.');
-    } else if (status >= 500) {
-      // Handle server errors
+    } else if (status !== undefined && status >= 500) {
       toast.error('A server error occurred. Please try again later.');
     } else if (!status) {
-      // Handle network errors
       toast.error('Unable to connect to the server. Please check your internet connection.');
     }
-    
-    // Return a consistent error object
+
     return Promise.reject({
       status,
       message: errorMessage,
@@ -128,16 +96,19 @@ api.interceptors.response.use(
 );
 
 // Helper function to handle file uploads
-export const uploadFile = async (file, url = '/upload', fieldName = 'file', onUploadProgress) => {
+export const uploadFile = async (
+  file: File,
+  url = '/upload',
+  fieldName = 'file',
+  onUploadProgress?: (percent: number) => void
+): Promise<any> => {
   const formData = new FormData();
   formData.append(fieldName, file);
   
   return api.post(url, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+    headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: (progressEvent) => {
-      if (onUploadProgress && progressEvent.lengthComputable) {
+      if (onUploadProgress && progressEvent.lengthComputable && progressEvent.total) {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
         onUploadProgress(percentCompleted);
       }
@@ -146,34 +117,30 @@ export const uploadFile = async (file, url = '/upload', fieldName = 'file', onUp
 };
 
 // Helper function to handle token refresh
-export const refreshToken = async () => {
-  const refreshToken = localStorage.getItem(config.auth.refreshTokenKey);
-  if (!refreshToken) {
+export const refreshToken = async (): Promise<string> => {
+  const storedRefreshToken = localStorage.getItem(config.auth.refreshTokenKey);
+  if (!storedRefreshToken) {
     throw new Error('No refresh token available');
   }
   
   try {
-    const response = await api.post('/auth/refresh-token', { refreshToken });
-    const { token, expiresIn } = response.data;
+    const response = await api.post('/auth/refresh-token', { refreshToken: storedRefreshToken });
+    const { token, expiresIn } = (response as any).data ?? response;
     
-    // Store the new token and expiration
     localStorage.setItem(config.auth.tokenKey, token);
     if (expiresIn) {
       const expiryTime = new Date().getTime() + expiresIn * 1000;
       localStorage.setItem(config.auth.tokenExpiryKey, expiryTime.toString());
     }
     
-    return token;
+    return token as string;
   } catch (error) {
-    // If refresh fails, clear auth data and redirect to login
     localStorage.removeItem(config.auth.tokenKey);
     localStorage.removeItem(config.auth.refreshTokenKey);
     localStorage.removeItem(config.auth.tokenExpiryKey);
-    
     if (!window.location.pathname.includes('/login')) {
       window.location.href = '/login';
     }
-    
     throw error;
   }
 };
@@ -181,35 +148,24 @@ export const refreshToken = async () => {
 // Add a request interceptor to handle token refresh
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
+  async (error: any) => {
     const originalRequest = error.config;
-    
-    // If the error is 401 and we haven't already tried to refresh the token
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
       try {
         const newToken = await refreshToken();
-        
-        // Update the Authorization header
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        
-        // Retry the original request with the new token
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, clear auth and redirect to login
         localStorage.removeItem(config.auth.tokenKey);
         localStorage.removeItem(config.auth.refreshTokenKey);
         localStorage.removeItem(config.auth.tokenExpiryKey);
-        
         if (!window.location.pathname.includes('/login')) {
           window.location.href = '/login';
         }
-        
         return Promise.reject(refreshError);
       }
     }
-    
     return Promise.reject(error);
   }
 );

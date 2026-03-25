@@ -1,54 +1,57 @@
-// @ts-nocheck
 import { createContext, useContext, useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { useNotification } from "../hooks";
 import { useAuth } from './AuthContext';
 
 const MAX_RECONNECT_ATTEMPTS = 5;
-const INITIAL_RECONNECT_DELAY = 1000; // 1 second
-const MAX_RECONNECT_DELAY = 30000; // 30 seconds
+const INITIAL_RECONNECT_DELAY = 1000;
+const MAX_RECONNECT_DELAY = 30000;
 
-export const WebSocketContext = createContext(null);
+type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
 
-export const WebSocketProvider = ({ children }) => {
-  const ws = useRef(null);
+type MessageHandler = (data: unknown) => void;
+
+export interface WebSocketContextType {
+  send: (type: string, data: unknown) => Promise<void>;
+  subscribe: (messageType: string, handler: MessageHandler) => () => void;
+  isConnected: () => boolean;
+  status: ConnectionStatus;
+}
+
+export const WebSocketContext = createContext<WebSocketContextType | null>(null);
+
+export const WebSocketProvider = ({ children }: { children: React.ReactNode }) => {
+  const ws = useRef<WebSocket | null>(null);
   const { showError, showWarning } = useNotification();
   const { isAuthenticated, token } = useAuth();
   
-  // State for connection status and reconnection
-  const [status, setStatus] = useState('disconnected'); // 'connected' | 'connecting' | 'disconnected' | 'error'
+  const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const reconnectAttempts = useRef(0);
-  const reconnectTimeoutRef = useRef(null);
-  const messageQueue = useRef([]);
-  const messageHandlers = useRef(new Map());
-  const pingInterval = useRef(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const messageQueue = useRef<Array<{ type: string; data: unknown; resolve?: () => void; reject?: (e: unknown) => void }>>([]);
+  const messageHandlers = useRef(new Map<string, Set<MessageHandler>>());
+  const pingInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastPongTime = useRef(Date.now());
 
-  const getEnvVariable = (key, defaultValue) => {
+  const getEnvVariable = (key: string, defaultValue: string): string => {
     if (typeof process !== 'undefined' && process.env && process.env[key]) {
-      return process.env[key];
-    }
-    // if (typeof import !== 'undefined' && import.meta && import.meta.env) {
-    //   return import.meta.env[key];
-    // }
-    if (process.env[key]) {
-      return process.env[key];
+      return process.env[key] as string;
     }
     return defaultValue;
   };
 
-  // Calculate next reconnect delay with exponential backoff
-  const getReconnectDelay = useCallback(() => {
+  const getReconnectDelay = useCallback((): number => {
     return Math.min(
       INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttempts.current - 1),
       MAX_RECONNECT_DELAY
     );
   }, []);
 
-  // Process queued messages
   const processQueue = useCallback(() => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       while (messageQueue.current.length > 0) {
-        const { type, data, resolve, reject } = messageQueue.current.shift();
+        const item = messageQueue.current.shift();
+        if (!item) continue;
+        const { type, data, resolve, reject } = item;
         try {
           ws.current.send(JSON.stringify({ type, data }));
           if (resolve) resolve();
@@ -59,54 +62,42 @@ export const WebSocketProvider = ({ children }) => {
     }
   }, []);
 
-  // Handle incoming messages
-  const handleMessage = useCallback((event) => {
+  const handleMessage = useCallback((event: MessageEvent) => {
     try {
-      const message = JSON.parse(event.data);
+      const message = JSON.parse(event.data as string) as { type: string; data: unknown };
       lastPongTime.current = Date.now();
 
-      // Handle pong messages
-      if (message.type === 'pong') {
-        return;
-      }
+      if (message.type === 'pong') return;
 
-      // Notify all handlers for this message type
-      const handlers = messageHandlers.current.get(message.type) || [];
+      const handlers = messageHandlers.current.get(message.type) || new Set();
       handlers.forEach(handler => handler(message.data));
 
-      // Notify wildcard handlers
-      const wildcardHandlers = messageHandlers.current.get('*') || [];
+      const wildcardHandlers = messageHandlers.current.get('*') || new Set();
       wildcardHandlers.forEach(handler => handler(message));
     } catch (error) {
       console.error('Error processing WebSocket message:', error);
     }
   }, []);
 
-  // Send ping to keep connection alive
   const sendPing = useCallback(() => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({ type: 'ping' }));
-      
-      // Check if we haven't received a pong in a while
-      if (Date.now() - lastPongTime.current > 10000) { // 10 seconds without pong
+      if (Date.now() - lastPongTime.current > 10000) {
         console.warn('No pong received, reconnecting...');
         ws.current.close();
       }
     }
   }, []);
 
-  // Check if WebSocket is connected
-  const isConnected = useCallback(() => {
+  const isConnected = useCallback((): boolean => {
     return ws.current?.readyState === WebSocket.OPEN;
   }, []);
 
-  // Connect to WebSocket
   const connect = useCallback(() => {
     if (isConnected() || !token) return;
 
     setStatus('connecting');
     
-    // Use the helper function to get the WebSocket URL
     const wsUrlString = getEnvVariable('VITE_WS_URL', 'ws://localhost:8000/ws');
     const wsUrl = new URL(wsUrlString);
     wsUrl.searchParams.set('token', token);
@@ -118,31 +109,23 @@ export const WebSocketProvider = ({ children }) => {
       console.log('WebSocket connected');
       setStatus('connected');
       reconnectAttempts.current = 0;
-      
-      // Start ping interval
-      pingInterval.current = setInterval(sendPing, 30000); // 30 seconds
-      
-      // Process any queued messages
+      pingInterval.current = setInterval(sendPing, 30000);
       processQueue();
     };
 
     ws.current.onmessage = handleMessage;
 
-    ws.current.onclose = (event) => {
+    ws.current.onclose = (event: CloseEvent) => {
       console.log('WebSocket disconnected:', event.code, event.reason);
       setStatus('disconnected');
-      
-      // Clear ping interval
       if (pingInterval.current) {
         clearInterval(pingInterval.current);
         pingInterval.current = null;
       }
 
-      // Attempt to reconnect if we didn't close intentionally
       if (event.code !== 1000 && isAuthenticated) {
         const delay = getReconnectDelay();
         console.log(`Attempting to reconnect in ${delay}ms...`);
-        
         reconnectTimeoutRef.current = setTimeout(() => {
           reconnectAttempts.current += 1;
           connect();
@@ -156,66 +139,44 @@ export const WebSocketProvider = ({ children }) => {
       }
     };
 
-    ws.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
+    ws.current.onerror = () => {
+      console.error('WebSocket error');
       setStatus('error');
-      if (ws.current) {
-        ws.current.close();
-      }
-    };
-
-    return () => {
-      if (ws.current) {
-        ws.current.close();
-      }
+      if (ws.current) ws.current.close();
     };
   }, [token, isAuthenticated, getReconnectDelay, handleMessage, processQueue, sendPing, showError, showWarning, isConnected]);
 
-  // Reconnect when authentication state changes
   useEffect(() => {
     if (isAuthenticated) {
       connect();
     } else {
-      if (ws.current) {
-        ws.current.close();
-      }
+      if (ws.current) ws.current.close();
       setStatus('disconnected');
     }
 
     return () => {
-      if (ws.current) {
-        ws.current.close();
-      }
-      if (pingInterval.current) {
-        clearInterval(pingInterval.current);
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
+      if (ws.current) ws.current.close();
+      if (pingInterval.current) clearInterval(pingInterval.current);
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
     };
   }, [isAuthenticated, connect]);
 
-  // Subscribe to message types
-  const subscribe = useCallback((messageType, handler) => {
+  const subscribe = useCallback((messageType: string, handler: MessageHandler): () => void => {
     if (!messageHandlers.current.has(messageType)) {
       messageHandlers.current.set(messageType, new Set());
     }
-    messageHandlers.current.get(messageType).add(handler);
+    messageHandlers.current.get(messageType)!.add(handler);
 
-    // Return unsubscribe function
     return () => {
       if (messageHandlers.current.has(messageType)) {
-        const handlers = messageHandlers.current.get(messageType);
+        const handlers = messageHandlers.current.get(messageType)!;
         handlers.delete(handler);
-        if (handlers.size === 0) {
-          messageHandlers.current.delete(messageType);
-        }
+        if (handlers.size === 0) messageHandlers.current.delete(messageType);
       }
     };
   }, []);
 
-  // Send message to WebSocket
-  const send = useCallback((type, data) => {
+  const send = useCallback((type: string, data: unknown): Promise<void> => {
     return new Promise((resolve, reject) => {
       if (ws.current?.readyState === WebSocket.OPEN) {
         try {
@@ -225,19 +186,13 @@ export const WebSocketProvider = ({ children }) => {
           reject(error);
         }
       } else {
-        // Queue the message if not connected
         messageQueue.current.push({ type, data, resolve, reject });
-        
-        // Try to reconnect if not already connecting
-        if (status === 'disconnected' && isAuthenticated) {
-          connect();
-        }
+        if (status === 'disconnected' && isAuthenticated) connect();
       }
     });
   }, [connect, isAuthenticated, status]);
 
-  // Context value
-  const value = useMemo(() => ({
+  const value = useMemo<WebSocketContextType>(() => ({
     send,
     subscribe,
     isConnected,
@@ -251,7 +206,7 @@ export const WebSocketProvider = ({ children }) => {
   );
 };
 
-export const useWebSocket = () => {
+export const useWebSocket = (): WebSocketContextType => {
   const context = useContext(WebSocketContext);
   if (!context) {
     throw new Error('useWebSocket must be used within a WebSocketProvider');

@@ -1,9 +1,19 @@
-// @ts-nocheck
 /**
  * PWA utilities for service worker registration and updates
  */
 
 import { useRegisterSW } from 'virtual:pwa-register/react';
+
+interface InstallInstructions {
+  browser: string;
+  steps: string[];
+}
+
+interface CacheSizeInfo {
+  usage: number | undefined;
+  quota: number | undefined;
+  percentage: string;
+}
 
 /**
  * Hook to register service worker and handle updates
@@ -14,28 +24,26 @@ export const usePWA = () => {
     offlineReady: [offlineReady, setOfflineReady],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(registration) {
+    onRegistered(registration: ServiceWorkerRegistration | undefined) {
       console.log('Service Worker registered:', registration);
-      
-      // Check for updates every hour
       if (registration) {
         setInterval(() => {
           registration.update();
-        }, 60 * 60 * 1000); // 1 hour
+        }, 60 * 60 * 1000);
       }
     },
-    onRegisterError(error) {
+    onRegisterError(error: unknown) {
       console.error('Service Worker registration error:', error);
     },
     immediate: true,
   });
 
-  const closePrompt = () => {
+  const closePrompt = (): void => {
     setOfflineReady(false);
     setNeedRefresh(false);
   };
 
-  const updateApp = () => {
+  const updateApp = (): void => {
     updateServiceWorker(true);
   };
 
@@ -50,10 +58,10 @@ export const usePWA = () => {
 /**
  * Check if app is running in standalone mode (installed as PWA)
  */
-export const isStandalone = () => {
+export const isStandalone = (): boolean => {
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true ||
+    (window.navigator as any).standalone === true ||
     document.referrer.includes('android-app://')
   );
 };
@@ -61,7 +69,7 @@ export const isStandalone = () => {
 /**
  * Check if device is iOS
  */
-export const isIOS = () => {
+export const isIOS = (): boolean => {
   return (
     /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
@@ -71,14 +79,14 @@ export const isIOS = () => {
 /**
  * Check if browser supports PWA installation
  */
-export const canInstall = () => {
+export const canInstall = (): boolean => {
   return 'BeforeInstallPromptEvent' in window || isIOS();
 };
 
 /**
  * Get install instructions based on browser/device
  */
-export const getInstallInstructions = () => {
+export const getInstallInstructions = (): InstallInstructions => {
   const userAgent = navigator.userAgent.toLowerCase();
   
   if (isIOS()) {
@@ -138,10 +146,7 @@ export const getInstallInstructions = () => {
  * Cache management utilities
  */
 export const cacheManager = {
-  /**
-   * Clear all caches
-   */
-  async clearAll() {
+  async clearAll(): Promise<void> {
     if ('caches' in window) {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map((name) => caches.delete(name)));
@@ -149,25 +154,19 @@ export const cacheManager = {
     }
   },
 
-  /**
-   * Get cache size
-   */
-  async getSize() {
+  async getSize(): Promise<CacheSizeInfo | null> {
     if ('caches' in window && 'estimate' in navigator.storage) {
       const estimate = await navigator.storage.estimate();
       return {
         usage: estimate.usage,
         quota: estimate.quota,
-        percentage: ((estimate.usage / estimate.quota) * 100).toFixed(2),
+        percentage: (((estimate.usage ?? 0) / (estimate.quota ?? 1)) * 100).toFixed(2),
       };
     }
     return null;
   },
 
-  /**
-   * Precache specific URLs
-   */
-  async precache(urls) {
+  async precache(urls: string[]): Promise<void> {
     if ('caches' in window) {
       const cache = await caches.open('precache-v1');
       await cache.addAll(urls);
@@ -180,30 +179,20 @@ export const cacheManager = {
  * Offline detection utilities
  */
 export const offlineManager = {
-  /**
-   * Check if online
-   */
-  isOnline() {
+  isOnline(): boolean {
     return navigator.onLine;
   },
 
-  /**
-   * Listen for online/offline events
-   */
-  listen(onOnline, onOffline) {
+  listen(onOnline: () => void, onOffline: () => void): () => void {
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
-
     return () => {
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
     };
   },
 
-  /**
-   * Save data for offline use
-   */
-  saveForOffline(key, data) {
+  saveForOffline(key: string, data: unknown): void {
     try {
       localStorage.setItem(`offline-${key}`, JSON.stringify(data));
     } catch (error) {
@@ -211,28 +200,21 @@ export const offlineManager = {
     }
   },
 
-  /**
-   * Get offline data
-   */
-  getOfflineData(key) {
+  getOfflineData<T = unknown>(key: string): T | null {
     try {
       const data = localStorage.getItem(`offline-${key}`);
-      return data ? JSON.parse(data) : null;
+      return data ? JSON.parse(data) as T : null;
     } catch (error) {
       console.error('Error getting offline data:', error);
       return null;
     }
   },
 
-  /**
-   * Clear offline data
-   */
-  clearOfflineData(key) {
+  clearOfflineData(key?: string): void {
     try {
       if (key) {
         localStorage.removeItem(`offline-${key}`);
       } else {
-        // Clear all offline data
         Object.keys(localStorage)
           .filter((k) => k.startsWith('offline-'))
           .forEach((k) => localStorage.removeItem(k));

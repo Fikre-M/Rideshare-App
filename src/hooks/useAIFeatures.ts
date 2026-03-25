@@ -1,31 +1,46 @@
-// @ts-nocheck
 // React Query hooks for AI features with caching and error handling
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
 import openAIService from '../services/openAIService';
 import mapboxService from '../services/mapboxService';
 
+interface Coordinate {
+  lat: number;
+  lng: number;
+}
+
+interface RouteOptimizationResult {
+  routes: any[];
+  recommendation: any;
+  recommendedRoute: any;
+}
+
+interface TokenUsage {
+  total: number;
+  byFeature: Record<string, number>;
+}
+
 // Smart Driver Matching Hook
-export const useSmartMatching = (options = {}) => {
+export const useSmartMatching = (options: Record<string, unknown> = {}) => {
   return useMutation({
-    mutationFn: async ({ drivers, passengerPreferences }) => {
+    mutationFn: async ({ drivers, passengerPreferences }: { drivers: any[]; passengerPreferences: any }) => {
       return await openAIService.matchDriverToPassenger(drivers, passengerPreferences);
     },
     retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
     ...options,
   });
 };
 
 // Dynamic Pricing Hook
-export const useDynamicPricing = (pricingContext, options = {}) => {
+export const useDynamicPricing = (pricingContext: Record<string, unknown> | null, options: Record<string, unknown> = {}) => {
   return useQuery({
     queryKey: ['dynamic-pricing', pricingContext],
     queryFn: async () => {
-      return await openAIService.calculateDynamicPricing(pricingContext);
+      return await openAIService.calculateDynamicPricing(pricingContext ?? {});
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
     enabled: !!pricingContext && Object.keys(pricingContext).length > 0,
     retry: 2,
     ...options,
@@ -33,16 +48,19 @@ export const useDynamicPricing = (pricingContext, options = {}) => {
 };
 
 // Route Optimization Hook (combines Mapbox + OpenAI)
-export const useRouteOptimization = (options = {}) => {
+export const useRouteOptimization = () => {
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<Error | null>(null);
 
-  const optimizeRoute = useCallback(async (origin, destination, userPreferences = {}) => {
+  const optimizeRoute = useCallback(async (
+    origin: Coordinate,
+    destination: Coordinate,
+    userPreferences: Record<string, unknown> = {}
+  ): Promise<RouteOptimizationResult> => {
     setIsOptimizing(true);
     setError(null);
 
     try {
-      // Step 1: Fetch real routes from Mapbox
       const mapboxResult = await mapboxService.getRouteWithTraffic(origin, destination, {
         alternatives: true,
       });
@@ -51,42 +69,33 @@ export const useRouteOptimization = (options = {}) => {
         throw new Error('No routes found');
       }
 
-      // Step 2: Pass routes to OpenAI for intelligent recommendation
-      const aiResult = await openAIService.optimizeRoute(
-        mapboxResult.routes,
-        userPreferences
-      );
+      const aiResult = await openAIService.optimizeRoute(mapboxResult.routes, userPreferences);
 
       setIsOptimizing(false);
-
       return {
         routes: mapboxResult.routes,
         recommendation: aiResult,
         recommendedRoute: mapboxResult.routes[aiResult.recommendedRouteIndex],
       };
     } catch (err) {
-      setError(err);
+      setError(err as Error);
       setIsOptimizing(false);
       throw err;
     }
   }, []);
 
-  return {
-    optimizeRoute,
-    isOptimizing,
-    error,
-  };
+  return { optimizeRoute, isOptimizing, error };
 };
 
 // Demand Prediction Hook
-export const useDemandPrediction = (demandContext, options = {}) => {
+export const useDemandPrediction = (demandContext: Record<string, unknown> | null, options: Record<string, unknown> = {}) => {
   return useQuery({
     queryKey: ['demand-prediction', demandContext],
     queryFn: async () => {
-      return await openAIService.predictDemand(demandContext);
+      return await openAIService.predictDemand(demandContext ?? {});
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 15, // 15 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
     enabled: !!demandContext && Object.keys(demandContext).length > 0,
     retry: 2,
     ...options,
@@ -94,14 +103,14 @@ export const useDemandPrediction = (demandContext, options = {}) => {
 };
 
 // Predictive Analytics Hook
-export const usePredictiveAnalytics = (analyticsContext, options = {}) => {
+export const usePredictiveAnalytics = (analyticsContext: Record<string, unknown> | null, options: Record<string, unknown> = {}) => {
   return useQuery({
     queryKey: ['predictive-analytics', analyticsContext],
     queryFn: async () => {
-      return await openAIService.getPredictiveAnalytics(analyticsContext);
+      return await openAIService.getPredictiveAnalytics(analyticsContext ?? {});
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
     enabled: !!analyticsContext,
     retry: 2,
     ...options,
@@ -110,7 +119,7 @@ export const usePredictiveAnalytics = (analyticsContext, options = {}) => {
 
 // Token Usage Hook
 export const useTokenUsage = () => {
-  const [usage, setUsage] = useState(openAIService.getTokenUsage());
+  const [usage, setUsage] = useState<TokenUsage>(openAIService.getTokenUsage());
 
   const refreshUsage = useCallback(() => {
     setUsage(openAIService.getTokenUsage());
@@ -121,34 +130,28 @@ export const useTokenUsage = () => {
     setUsage(openAIService.getTokenUsage());
   }, []);
 
-  return {
-    usage,
-    refreshUsage,
-    resetUsage,
-  };
+  return { usage, refreshUsage, resetUsage };
 };
 
 // Streaming Chat Hook
 export const useStreamingChat = () => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamedContent, setStreamedContent] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<Error | null>(null);
 
-  const streamChat = useCallback(async (messages, options = {}) => {
+  const streamChat = useCallback(async (messages: any[], options: Record<string, unknown> = {}) => {
     setIsStreaming(true);
     setStreamedContent('');
     setError(null);
 
     try {
       const stream = openAIService.streamChatCompletion(messages, options);
-
       for await (const chunk of stream) {
         setStreamedContent(prev => prev + chunk);
       }
-
       setIsStreaming(false);
     } catch (err) {
-      setError(err);
+      setError(err as Error);
       setIsStreaming(false);
       throw err;
     }
@@ -159,19 +162,13 @@ export const useStreamingChat = () => {
     setError(null);
   }, []);
 
-  return {
-    streamChat,
-    isStreaming,
-    streamedContent,
-    error,
-    resetStream,
-  };
+  return { streamChat, isStreaming, streamedContent, error, resetStream };
 };
 
 // Mapbox Directions Hook
-export const useMapboxDirections = (options = {}) => {
+export const useMapboxDirections = (options: Record<string, unknown> = {}) => {
   return useMutation({
-    mutationFn: async ({ coordinates, routeOptions }) => {
+    mutationFn: async ({ coordinates, routeOptions }: { coordinates: Coordinate[]; routeOptions?: Record<string, unknown> }) => {
       return await mapboxService.getDirections(coordinates, routeOptions);
     },
     retry: 2,
@@ -182,47 +179,39 @@ export const useMapboxDirections = (options = {}) => {
 // Geocoding Hook
 export const useGeocoding = () => {
   const geocode = useMutation({
-    mutationFn: async (address) => {
+    mutationFn: async (address: string) => {
       return await mapboxService.geocodeAddress(address);
     },
     retry: 1,
   });
 
   const reverseGeocode = useMutation({
-    mutationFn: async (coordinates) => {
+    mutationFn: async (coordinates: Coordinate) => {
       return await mapboxService.reverseGeocode(coordinates);
     },
     retry: 1,
   });
 
-  return {
-    geocode,
-    reverseGeocode,
-  };
+  return { geocode, reverseGeocode };
 };
 
 // Combined AI Service Status Hook
 export const useAIServiceStatus = () => {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState({
-    openAI: 'unknown',
-    mapbox: 'unknown',
-  });
+  const [status, setStatus] = useState({ openAI: 'unknown', mapbox: 'unknown' });
 
   const checkStatus = useCallback(async () => {
-    // Check OpenAI
     try {
-      openAIService.getClient();
+      (openAIService as any).getClient?.();
       setStatus(prev => ({ ...prev, openAI: 'connected' }));
-    } catch (err) {
+    } catch {
       setStatus(prev => ({ ...prev, openAI: 'error' }));
     }
 
-    // Check Mapbox
     try {
       mapboxService.getAccessToken();
       setStatus(prev => ({ ...prev, mapbox: 'connected' }));
-    } catch (err) {
+    } catch {
       setStatus(prev => ({ ...prev, mapbox: 'error' }));
     }
   }, []);
@@ -233,9 +222,5 @@ export const useAIServiceStatus = () => {
     queryClient.invalidateQueries({ queryKey: ['predictive-analytics'] });
   }, [queryClient]);
 
-  return {
-    status,
-    checkStatus,
-    invalidateAll,
-  };
+  return { status, checkStatus, invalidateAll };
 };

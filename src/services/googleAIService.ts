@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Google AI Service — routes all requests through the server-side proxy.
  * API keys never touch the browser.
@@ -6,13 +5,31 @@
 
 const PROXY_BASE = import.meta.env.VITE_AI_PROXY_URL || '/api/ai';
 
+interface ConversationPart {
+  text: string;
+}
+
+interface ConversationTurn {
+  role: 'user' | 'model';
+  parts: ConversationPart[];
+}
+
+interface ChatResponse {
+  response: string;
+  confidence: number;
+  suggestions: string[];
+  timestamp: string;
+  model: string;
+}
+
 class GoogleAIService {
+  private conversationHistory: Map<string, ConversationTurn[]>;
+
   constructor() {
-    // conversationId → array of { role, parts: [{ text }] }
     this.conversationHistory = new Map();
   }
 
-  async sendChatMessage(message, conversationId = 'default') {
+  async sendChatMessage(message: string, conversationId = 'default'): Promise<ChatResponse> {
     const history = this.conversationHistory.get(conversationId) || [];
 
     try {
@@ -33,13 +50,12 @@ class GoogleAIService {
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
+        const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
         throw new Error(err.error || `Proxy error ${res.status}`);
       }
 
-      const { text } = await res.json();
+      const { text } = await res.json() as { text: string };
 
-      // Append to local history for multi-turn context
       history.push(
         { role: 'user', parts: [{ text: message }] },
         { role: 'model', parts: [{ text }] }
@@ -59,7 +75,7 @@ class GoogleAIService {
     }
   }
 
-  generateSuggestions(userMessage, aiResponse) {
+  generateSuggestions(userMessage: string, aiResponse: string): string[] {
     const lowerMessage = userMessage.toLowerCase();
     const lowerResponse = aiResponse.toLowerCase();
 
@@ -78,15 +94,15 @@ class GoogleAIService {
     }
   }
 
-  clearConversation(conversationId = 'default') {
+  clearConversation(conversationId = 'default'): void {
     this.conversationHistory.delete(conversationId);
   }
 
-  clearAllConversations() {
+  clearAllConversations(): void {
     this.conversationHistory.clear();
   }
 
-  getMockResponse(message) {
+  getMockResponse(message: string): ChatResponse {
     const lowerMessage = message.toLowerCase();
     let response = '';
     let suggestions = ['Book a ride', 'Track my driver', 'Cancel trip', 'Fare estimate'];
@@ -95,16 +111,16 @@ class GoogleAIService {
       response = '🚗 I can help you book a ride! Where would you like to go?';
       suggestions = ['Downtown to Airport', 'Home to Office', 'Mall to Restaurant', 'Get fare estimate'];
     } else if (lowerMessage.includes('driver') || lowerMessage.includes('track')) {
-      response = '📍 Your driver is 3 minutes away! I\'ll send you live updates.';
+      response = "📍 Your driver is 3 minutes away! I'll send you live updates.";
       suggestions = ['Call driver', 'Share trip', 'View route', 'Cancel trip'];
     } else if (lowerMessage.includes('fare') || lowerMessage.includes('price')) {
       response = '💰 Estimated fare: $12–15 based on current demand and distance.';
       suggestions = ['Book this ride', 'Compare prices', 'View breakdown', 'Apply promo code'];
     } else if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
-      response = '👋 Hello! I\'m your AI rideshare assistant. How can I help you today?';
+      response = "👋 Hello! I'm your AI rideshare assistant. How can I help you today?";
       suggestions = ['Book a ride', 'Track my driver', 'Fare estimate', 'View trip history'];
     } else {
-      response = '🤖 I\'m here to help with your ride needs! What would you like to do?';
+      response = "🤖 I'm here to help with your ride needs! What would you like to do?";
       suggestions = ['Book a ride', 'Track my driver', 'Fare estimate', 'Get help'];
     }
 

@@ -1,59 +1,77 @@
-// @ts-nocheck
 // AI Budget Guard Service - Tracks and limits AI API costs
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// GPT-4o pricing (as of 2024)
-const PRICING = {
-  'gpt-4o': {
-    input: 5 / 1_000_000,  // $5 per 1M input tokens
-    output: 15 / 1_000_000, // $15 per 1M output tokens
-  },
-  'gpt-4o-mini': {
-    input: 0.15 / 1_000_000,  // $0.15 per 1M input tokens
-    output: 0.60 / 1_000_000, // $0.60 per 1M output tokens
-  },
-  'gpt-3.5-turbo': {
-    input: 0.50 / 1_000_000,  // $0.50 per 1M input tokens
-    output: 1.50 / 1_000_000, // $1.50 per 1M output tokens
-  },
+interface TokenUsage {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+}
+
+interface SessionTokens {
+  input: number;
+  output: number;
+  total: number;
+}
+
+interface BudgetStats {
+  sessionCost: number;
+  sessionTokens: SessionTokens;
+  costByFeature: Record<string, number>;
+  budgetLimit: number;
+  remainingBudget: number;
+  budgetPercentage: number;
+  budgetExceeded: boolean;
+  sessionDuration: number;
+}
+
+interface BudgetState {
+  sessionCost: number;
+  sessionTokens: SessionTokens;
+  costByFeature: Record<string, number>;
+  budgetLimit: number;
+  budgetEnabled: boolean;
+  budgetExceeded: boolean;
+  warningThreshold: number;
+  warningShown: boolean;
+  sessionStartTime: number;
+  lastResetTime: number;
+  trackUsage: (feature: string, usage: TokenUsage, model?: string) => void;
+  setBudgetLimit: (limit: number) => void;
+  setBudgetEnabled: (enabled: boolean) => void;
+  setWarningThreshold: (threshold: number) => void;
+  resetSession: () => void;
+  canMakeRequest: () => boolean;
+  getRemainingBudget: () => number;
+  getBudgetPercentage: () => number;
+  shouldShowWarning: () => boolean;
+  getStats: () => BudgetStats;
+}
+
+const PRICING: Record<string, { input: number; output: number }> = {
+  'gpt-4o': { input: 5 / 1_000_000, output: 15 / 1_000_000 },
+  'gpt-4o-mini': { input: 0.15 / 1_000_000, output: 0.60 / 1_000_000 },
+  'gpt-3.5-turbo': { input: 0.50 / 1_000_000, output: 1.50 / 1_000_000 },
 };
 
-// Default budget limit
-const DEFAULT_BUDGET_LIMIT = 0.50; // $0.50 per session
+const DEFAULT_BUDGET_LIMIT = 0.50;
 
-// Budget store with persistence
-export const useBudgetStore = create(
+export const useBudgetStore = create<BudgetState>()(
   persist(
     (set, get) => ({
-      // Session tracking
       sessionCost: 0,
-      sessionTokens: {
-        input: 0,
-        output: 0,
-        total: 0,
-      },
-      
-      // Feature breakdown
+      sessionTokens: { input: 0, output: 0, total: 0 },
       costByFeature: {},
-      
-      // Budget settings
       budgetLimit: DEFAULT_BUDGET_LIMIT,
       budgetEnabled: true,
       budgetExceeded: false,
-      
-      // Warnings
-      warningThreshold: 0.8, // Warn at 80% of budget
+      warningThreshold: 0.8,
       warningShown: false,
-      
-      // Session metadata
       sessionStartTime: Date.now(),
       lastResetTime: Date.now(),
       
-      // Actions
       trackUsage: (feature, usage, model = 'gpt-4o') => {
         if (!usage) return;
-        
         const pricing = PRICING[model] || PRICING['gpt-4o'];
         const inputCost = (usage.prompt_tokens || 0) * pricing.input;
         const outputCost = (usage.completion_tokens || 0) * pricing.output;
@@ -65,30 +83,19 @@ export const useBudgetStore = create(
             ...state.costByFeature,
             [feature]: (state.costByFeature[feature] || 0) + totalCost,
           };
-          
-          const newSessionTokens = {
+          const newSessionTokens: SessionTokens = {
             input: state.sessionTokens.input + (usage.prompt_tokens || 0),
             output: state.sessionTokens.output + (usage.completion_tokens || 0),
             total: state.sessionTokens.total + (usage.total_tokens || 0),
           };
-          
           const budgetExceeded = state.budgetEnabled && newSessionCost >= state.budgetLimit;
           const warningShown = newSessionCost >= (state.budgetLimit * state.warningThreshold);
-          
-          return {
-            sessionCost: newSessionCost,
-            sessionTokens: newSessionTokens,
-            costByFeature: newCostByFeature,
-            budgetExceeded,
-            warningShown,
-          };
+          return { sessionCost: newSessionCost, sessionTokens: newSessionTokens, costByFeature: newCostByFeature, budgetExceeded, warningShown };
         });
       },
       
       setBudgetLimit: (limit) => set({ budgetLimit: limit }),
-      
       setBudgetEnabled: (enabled) => set({ budgetEnabled: enabled }),
-      
       setWarningThreshold: (threshold) => set({ warningThreshold: threshold }),
       
       resetSession: () => set({
@@ -118,9 +125,9 @@ export const useBudgetStore = create(
       
       shouldShowWarning: () => {
         const state = get();
-        return state.budgetEnabled && 
-               state.sessionCost >= (state.budgetLimit * state.warningThreshold) &&
-               !state.budgetExceeded;
+        return state.budgetEnabled &&
+          state.sessionCost >= (state.budgetLimit * state.warningThreshold) &&
+          !state.budgetExceeded;
       },
       
       getStats: () => {
@@ -139,7 +146,6 @@ export const useBudgetStore = create(
     }),
     {
       name: 'ai-budget-storage',
-      // Reset session on page reload (don't persist session data)
       partialize: (state) => ({
         budgetLimit: state.budgetLimit,
         budgetEnabled: state.budgetEnabled,
@@ -149,64 +155,52 @@ export const useBudgetStore = create(
   )
 );
 
-// Budget Guard Service
+interface ConfigureOptions {
+  limit?: number;
+  enabled?: boolean;
+  warningThreshold?: number;
+}
+
 class AIBudgetGuard {
+  private store: typeof useBudgetStore;
+  
   constructor() {
     this.store = useBudgetStore;
   }
   
-  // Track AI usage
-  trackUsage(feature, usage, model = 'gpt-4o') {
+  trackUsage(feature: string, usage: TokenUsage, model = 'gpt-4o'): void {
     this.store.getState().trackUsage(feature, usage, model);
   }
   
-  // Check if request can be made
-  canMakeRequest() {
+  canMakeRequest(): boolean {
     return this.store.getState().canMakeRequest();
   }
   
-  // Get budget stats
-  getStats() {
+  getStats(): BudgetStats {
     return this.store.getState().getStats();
   }
   
-  // Check if warning should be shown
-  shouldShowWarning() {
+  shouldShowWarning(): boolean {
     return this.store.getState().shouldShowWarning();
   }
   
-  // Reset session
-  resetSession() {
+  resetSession(): void {
     this.store.getState().resetSession();
   }
   
-  // Configure budget
-  configure(options = {}) {
+  configure(options: ConfigureOptions = {}): void {
     const { limit, enabled, warningThreshold } = options;
-    
-    if (limit !== undefined) {
-      this.store.getState().setBudgetLimit(limit);
-    }
-    
-    if (enabled !== undefined) {
-      this.store.getState().setBudgetEnabled(enabled);
-    }
-    
-    if (warningThreshold !== undefined) {
-      this.store.getState().setWarningThreshold(warningThreshold);
-    }
+    if (limit !== undefined) this.store.getState().setBudgetLimit(limit);
+    if (enabled !== undefined) this.store.getState().setBudgetEnabled(enabled);
+    if (warningThreshold !== undefined) this.store.getState().setWarningThreshold(warningThreshold);
   }
   
-  // Format cost for display
-  formatCost(cost) {
+  formatCost(cost: number): string {
     return `$${cost.toFixed(4)}`;
   }
   
-  // Format tokens for display
-  formatTokens(tokens) {
-    if (tokens >= 1000) {
-      return `${(tokens / 1000).toFixed(1)}K`;
-    }
+  formatTokens(tokens: number): string {
+    if (tokens >= 1000) return `${(tokens / 1000).toFixed(1)}K`;
     return tokens.toString();
   }
 }

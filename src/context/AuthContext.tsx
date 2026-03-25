@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   createContext,
   useContext,
@@ -9,34 +8,70 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import jwtDecode from "jwt-decode";
 import { 
   validateImageFile, 
   fileToBase64, 
   compressImage, 
   storeImageInLocalStorage,
   getImageFromLocalStorage,
-  isValidBase64Image 
 } from "../utils/imageUtils";
 
 const TOKEN_KEY = "ai_rideshare_auth_token";
 const USERS_KEY = "ai_rideshare_users";
 const USER_IMAGES_KEY = "ai_rideshare_user_images";
 
-const AuthContext = createContext(null);
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  roles: string[];
+  avatar?: string;
+  totalRides?: number;
+  rating?: number;
+  exp?: number;
+  vehicle?: string;
+  licensePlate?: string;
+}
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+interface StoredUser extends User {
+  password: string;
+  joinDate: string;
+}
+
+interface RegisterData {
+  email: string;
+  password: string;
+  name: string;
+  role?: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  token: string | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (userData: RegisterData) => Promise<boolean>;
+  logout: () => void;
+  uploadProfileImage: (imageFile: File) => Promise<string>;
+  removeProfileImage: () => Promise<string>;
+  getUserImage: (userId: string) => string | null;
+  hasRole: (requiredRoles: string[]) => boolean;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
   const navigate = useNavigate();
   
-  // Initialize with some default users
   const initializeUsers = useCallback(() => {
     try {
       const existingUsers = localStorage.getItem(USERS_KEY);
       if (!existingUsers) {
-        const defaultUsers = [
+        const defaultUsers: StoredUser[] = [
           {
             id: "admin-001",
             email: "admin@airideshare.com",
@@ -80,32 +115,22 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Initialize users and check for existing session
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        await initializeUsers();
-        
-        // Check for existing token and user data
+        initializeUsers();
         const storedToken = localStorage.getItem(TOKEN_KEY);
         const storedUser = localStorage.getItem('user');
         
         if (storedToken && storedUser) {
-          const userData = JSON.parse(storedUser);
-          // Check if token is expired
+          const userData = JSON.parse(storedUser) as User;
           if (userData.exp && userData.exp * 1000 > Date.now()) {
-            // Check for custom profile image
             const imageKey = `${USER_IMAGES_KEY}_${userData.id}`;
             const customImage = getImageFromLocalStorage(imageKey);
-            
-            if (customImage) {
-              userData.avatar = customImage;
-            }
-            
+            if (customImage) userData.avatar = customImage;
             setUser(userData);
             setToken(storedToken);
           } else {
-            // Token expired, log out
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem('user');
           }
@@ -121,44 +146,40 @@ export const AuthProvider = ({ children }) => {
   }, [initializeUsers]);
 
   const login = useCallback(
-    async (email, password) => {
+    async (email: string, password: string): Promise<boolean> => {
       try {
         setIsLoading(true);
-        if (!email || !password) {
-          throw new Error("Email and password are required");
-        }
+        if (!email || !password) throw new Error("Email and password are required");
 
-        const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-        const user = users.find(u => u.email === email && u.password === password);
+        const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]") as StoredUser[];
+        const foundUser = users.find(u => u.email === email && u.password === password);
 
-        if (!user) {
-          throw new Error("Invalid email or password");
-        }
+        if (!foundUser) throw new Error("Invalid email or password");
 
         const mockToken = `ai-rideshare-token-${Date.now()}`;
         localStorage.setItem(TOKEN_KEY, mockToken);
 
-        const userData = {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          roles: user.roles,
-          avatar: user.avatar,
-          totalRides: user.totalRides,
-          rating: user.rating,
-          exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 hours from now
+        const userData: User = {
+          id: foundUser.id,
+          email: foundUser.email,
+          name: foundUser.name,
+          roles: foundUser.roles,
+          avatar: foundUser.avatar,
+          totalRides: foundUser.totalRides,
+          rating: foundUser.rating,
+          exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
         };
 
         setToken(mockToken);
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
 
-        toast.success(`Welcome back, ${user.name}!`);
+        toast.success(`Welcome back, ${foundUser.name}!`);
         navigate("/dashboard");
         return true;
       } catch (error) {
         console.error("Login failed:", error);
-        toast.error(error.message || "Login failed. Please try again.");
+        toast.error((error as Error).message || "Login failed. Please try again.");
         return false;
       } finally {
         setIsLoading(false);
@@ -168,28 +189,18 @@ export const AuthProvider = ({ children }) => {
   );
 
   const register = useCallback(
-    async (userData) => {
+    async (userData: RegisterData): Promise<boolean> => {
       try {
         setIsLoading(true);
         const { email, password, name, role = "user" } = userData;
 
-        if (!email || !password || !name) {
-          throw new Error("All fields are required");
-        }
+        if (!email || !password || !name) throw new Error("All fields are required");
+        if (password.length < 6) throw new Error("Password must be at least 6 characters");
 
-        if (password.length < 6) {
-          throw new Error("Password must be at least 6 characters");
-        }
+        const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]") as StoredUser[];
+        if (users.find(u => u.email === email)) throw new Error("User with this email already exists");
 
-        const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-        
-        // Check if user already exists
-        if (users.find(u => u.email === email)) {
-          throw new Error("User with this email already exists");
-        }
-
-        // Create new user
-        const newUser = {
+        const newUser: StoredUser = {
           id: `${role}-${Date.now()}`,
           email,
           password,
@@ -199,20 +210,16 @@ export const AuthProvider = ({ children }) => {
           joinDate: new Date().toISOString().split('T')[0],
           totalRides: 0,
           rating: 5.0,
-          ...(role === "driver" && {
-            vehicle: "Not specified",
-            licensePlate: "TBD",
-          }),
+          ...(role === "driver" && { vehicle: "Not specified", licensePlate: "TBD" }),
         };
 
         users.push(newUser);
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
 
-        // Auto-login after registration
         const mockToken = `ai-rideshare-token-${Date.now()}`;
         localStorage.setItem(TOKEN_KEY, mockToken);
 
-        const userSession = {
+        const userSession: User = {
           id: newUser.id,
           email: newUser.email,
           name: newUser.name,
@@ -230,7 +237,7 @@ export const AuthProvider = ({ children }) => {
         return true;
       } catch (error) {
         console.error("Registration failed:", error);
-        toast.error(error.message || "Registration failed. Please try again.");
+        toast.error((error as Error).message || "Registration failed. Please try again.");
         return false;
       } finally {
         setIsLoading(false);
@@ -240,158 +247,87 @@ export const AuthProvider = ({ children }) => {
   );
 
   const logout = useCallback(() => {
-    // Clear auth data immediately
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
-    
-    // Navigate immediately without waiting
     navigate('/login', { replace: true });
-    
-    // Show toast after navigation
-    setTimeout(() => {
-      toast.success('Successfully logged out');
-    }, 100);
+    setTimeout(() => { toast.success('Successfully logged out'); }, 100);
   }, [navigate]);
 
-  // Upload user profile image
-  const uploadProfileImage = useCallback(async (imageFile) => {
-    try {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+  const uploadProfileImage = useCallback(async (imageFile: File): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+    if (!imageFile) throw new Error('No file provided');
 
-      if (!imageFile) {
-        throw new Error('No file provided');
-      }
+    const validation = validateImageFile(imageFile, {
+      maxSize: 5 * 1024 * 1024,
+      allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+    });
 
-      // Validate image
-      const validation = validateImageFile(imageFile, {
-        maxSize: 5 * 1024 * 1024, // 5MB
-        allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-      });
+    if (!validation.isValid) throw new Error(validation.errors.join(', '));
 
-      if (!validation.isValid) {
-        throw new Error(validation.errors.join(', '));
-      }
+    const compressedImage = await compressImage(imageFile, { maxSizeKB: 500, quality: 0.8 });
+    const imageKey = `${USER_IMAGES_KEY}_${user.id}`;
+    const stored = storeImageInLocalStorage(imageKey, compressedImage);
 
-      // Compress the image first (pass the original file)
-      const compressedImage = await compressImage(imageFile, {
-        maxSizeKB: 500, // Target 500KB
-        quality: 0.8,
-      });
+    if (!stored) throw new Error('Failed to store image. Image may be too large.');
 
-      // Store image in localStorage
-      const imageKey = `${USER_IMAGES_KEY}_${user.id}`;
-      const stored = storeImageInLocalStorage(imageKey, compressedImage);
-
-      if (!stored) {
-        throw new Error('Failed to store image. Image may be too large.');
-      }
-
-      // Update user data with new avatar
-      const updatedUser = {
-        ...user,
-        avatar: compressedImage,
-      };
-
-      // Update user in localStorage
-      const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-      const userIndex = users.findIndex(u => u.id === user.id);
-      
-      if (userIndex !== -1) {
-        users[userIndex].avatar = compressedImage;
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-      }
-
-      // Update current user state
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-
-      toast.success('Profile image updated successfully!');
-      return compressedImage;
-    } catch (error) {
-      console.error('Error uploading profile image:', error);
-      toast.error(error.message || 'Failed to upload profile image');
-      throw error;
+    const updatedUser = { ...user, avatar: compressedImage };
+    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]") as StoredUser[];
+    const userIndex = users.findIndex(u => u.id === user.id);
+    if (userIndex !== -1) {
+      users[userIndex].avatar = compressedImage;
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
     }
+
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    toast.success('Profile image updated successfully!');
+    return compressedImage;
   }, [user]);
 
-  // Remove user profile image
-  const removeProfileImage = useCallback(async () => {
-    try {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+  const removeProfileImage = useCallback(async (): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
 
-      // Remove image from localStorage
-      const imageKey = `${USER_IMAGES_KEY}_${user.id}`;
-      localStorage.removeItem(imageKey);
+    const imageKey = `${USER_IMAGES_KEY}_${user.id}`;
+    localStorage.removeItem(imageKey);
 
-      // Set default avatar
-      const defaultAvatar = `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000000)}?w=150&h=150&fit=crop&crop=face`;
+    const defaultAvatar = `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000000)}?w=150&h=150&fit=crop&crop=face`;
+    const updatedUser = { ...user, avatar: defaultAvatar };
 
-      // Update user data
-      const updatedUser = {
-        ...user,
-        avatar: defaultAvatar,
-      };
-
-      // Update user in localStorage
-      const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-      const userIndex = users.findIndex(u => u.id === user.id);
-      
-      if (userIndex !== -1) {
-        users[userIndex].avatar = defaultAvatar;
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-      }
-
-      // Update current user state
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-
-      toast.success('Profile image removed successfully!');
-      return defaultAvatar;
-    } catch (error) {
-      console.error('Error removing profile image:', error);
-      toast.error(error.message || 'Failed to remove profile image');
-      throw error;
+    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]") as StoredUser[];
+    const userIndex = users.findIndex(u => u.id === user.id);
+    if (userIndex !== -1) {
+      users[userIndex].avatar = defaultAvatar;
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
     }
+
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    toast.success('Profile image removed successfully!');
+    return defaultAvatar;
   }, [user]);
 
-  // Get user image from storage
-  const getUserImage = useCallback((userId) => {
+  const getUserImage = useCallback((userId: string): string | null => {
     if (!userId) return null;
-    
     const imageKey = `${USER_IMAGES_KEY}_${userId}`;
     const image = getImageFromLocalStorage(imageKey);
-    
-    if (image) {
-      return image;
-    }
-
-    // Fallback to user data
-    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    if (image) return image;
+    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]") as StoredUser[];
     const userData = users.find(u => u.id === userId);
     return userData?.avatar || null;
   }, []);
 
-  // Check if user is authenticated based on token and expiration
   const isAuthenticated = useMemo(() => {
     if (!user || !token) return false;
-    
-    // Check if token is expired
     if (user.exp && user.exp * 1000 < Date.now()) {
-      // Token expired, log out
       logout();
       return false;
     }
-    
     return true;
   }, [user, token, logout]);
 
-  const value = {
+  const value: AuthContextType = {
     user,
     isLoading,
     isAuthenticated,
@@ -402,7 +338,7 @@ export const AuthProvider = ({ children }) => {
     uploadProfileImage,
     removeProfileImage,
     getUserImage,
-    hasRole: (requiredRoles) => {
+    hasRole: (requiredRoles: string[]) => {
       if (!user?.roles) return false;
       return requiredRoles.some(role => user.roles.includes(role));
     },
@@ -415,7 +351,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");

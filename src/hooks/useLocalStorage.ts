@@ -1,36 +1,27 @@
 import { useState, useEffect } from 'react';
 
-const useLocalStorage = (key, initialValue) => {
-  // Get from local storage then parse stored json or return initialValue
-  const readValue = () => {
-    // Prevent build error "window is undefined" but keep working
+type SetValue<T> = (value: T | ((val: T) => T)) => void;
+
+const useLocalStorage = <T>(key: string, initialValue: T): [T, SetValue<T>] => {
+  const readValue = (): T => {
     if (typeof window === 'undefined') {
       return initialValue;
     }
-
     try {
       const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
+      return item ? (JSON.parse(item) as T) : initialValue;
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
       return initialValue;
     }
   };
 
-  // State to store our value
-  // Pass initial state function to useState so logic is only executed once
-  const [storedValue, setStoredValue] = useState(readValue);
+  const [storedValue, setStoredValue] = useState<T>(readValue);
 
-  // Return a wrapped version of useState's setter function that persists the new value to localStorage
-  const setValue = (value) => {
+  const setValue: SetValue<T> = (value) => {
     try {
-      // Allow value to be a function so we have same API as useState
       const valueToStore = value instanceof Function ? value(storedValue) : value;
-      
-      // Save to state
       setStoredValue(valueToStore);
-      
-      // Save to local storage
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       }
@@ -39,17 +30,16 @@ const useLocalStorage = (key, initialValue) => {
     }
   };
 
-  // Sync changes across tabs
   useEffect(() => {
-    const handleStorageChange = (e) => {
+    const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key && e.newValue !== JSON.stringify(storedValue)) {
-        setStoredValue(JSON.parse(e.newValue));
+        setStoredValue(e.newValue ? JSON.parse(e.newValue) as T : initialValue);
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [key, storedValue]);
+  }, [key, storedValue, initialValue]);
 
   return [storedValue, setValue];
 };
