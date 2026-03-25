@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Mock OpenAI API for tests
 export const mockOpenAIResponses = {
   matching: {

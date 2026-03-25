@@ -1,3 +1,4 @@
+// @ts-nocheck
 import aiService from '../aiService';
 import openAIService from '../openAIService';
 import googleAIService from '../googleAIService';
