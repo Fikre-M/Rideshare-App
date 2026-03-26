@@ -146,26 +146,116 @@ const LandingPage = () => {
                 <Box
                   sx={{
                     height: 400,
-                    borderRadius: 2,
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                    borderRadius: 3,
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%)',
                     backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255,255,255,0.2)',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    p: 2.5,
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
                     flexDirection: 'column',
-                    color: 'white',
+                    gap: 1.5,
                   }}
                 >
-                  <Typography variant="h2" sx={{ mb: 2, fontSize: '4rem' }}>
-                    🤖
-                  </Typography>
-                  <Typography variant="h5" sx={{ mb: 2, textAlign: 'center' }}>
-                    AI-Powered Platform
-                  </Typography>
-                  <Typography variant="body1" sx={{ textAlign: 'center', opacity: 0.8 }}>
-                    Experience the future of transportation with intelligent algorithms
-                  </Typography>
+                  {/* Mock top bar */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.4)' }} />
+                    <Box sx={{ flex: 1, height: 8, borderRadius: 4, bgcolor: 'rgba(255,255,255,0.2)' }} />
+                    <Box sx={{ width: 60, height: 8, borderRadius: 4, bgcolor: 'rgba(255,255,255,0.3)' }} />
+                  </Box>
+
+                  {/* Mock KPI cards row */}
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    {[
+                      { label: 'Active Rides', value: '247', color: 'rgba(16,185,129,0.8)' },
+                      { label: 'Drivers Online', value: '89', color: 'rgba(59,130,246,0.8)' },
+                      { label: 'Revenue', value: '$12.4k', color: 'rgba(245,158,11,0.8)' },
+                    ].map((kpi) => (
+                      <Box
+                        key={kpi.label}
+                        sx={{
+                          flex: 1,
+                          bgcolor: 'rgba(255,255,255,0.12)',
+                          borderRadius: 2,
+                          p: 1.5,
+                          border: '1px solid rgba(255,255,255,0.15)',
+                        }}
+                      >
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', display: 'block', fontSize: '0.6rem' }}>
+                          {kpi.label}
+                        </Typography>
+                        <Typography variant="h6" sx={{ color: kpi.color, fontWeight: 700, fontSize: '1rem' }}>
+                          {kpi.value}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+
+                  {/* Mock AI match card */}
+                  <Box
+                    sx={{
+                      bgcolor: 'rgba(255,255,255,0.1)',
+                      borderRadius: 2,
+                      p: 1.5,
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                    }}
+                  >
+                    <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: 'rgba(103,126,234,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>
+                      🤖
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, display: 'block', fontSize: '0.7rem' }}>
+                        AI Match Found — 96% Score
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.6rem' }}>
+                        Driver: Sarah W. • ETA 3 min • Toyota Camry
+                      </Typography>
+                    </Box>
+                    <Box sx={{ bgcolor: 'rgba(16,185,129,0.8)', borderRadius: 1, px: 1, py: 0.3 }}>
+                      <Typography variant="caption" sx={{ color: 'white', fontSize: '0.6rem', fontWeight: 700 }}>LIVE</Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Mock chart bars */}
+                  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.6rem' }}>
+                      Demand Forecast (next 6h)
+                    </Typography>
+                    <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: 0.5 }}>
+                      {[40, 65, 85, 55, 90, 70, 45, 80, 60, 95, 75, 50].map((h, i) => (
+                        <Box
+                          key={i}
+                          sx={{
+                            flex: 1,
+                            height: `${h}%`,
+                            borderRadius: '3px 3px 0 0',
+                            bgcolor: i === 10 ? 'rgba(245,158,11,0.9)' : 'rgba(255,255,255,0.25)',
+                            transition: 'height 0.3s ease',
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+
+                  {/* Mock pricing row */}
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Box sx={{ flex: 1, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 1.5, p: 1, border: '1px solid rgba(255,255,255,0.12)' }}>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.55rem', display: 'block' }}>Dynamic Price</Typography>
+                      <Typography variant="caption" sx={{ color: 'rgba(245,158,11,0.9)', fontWeight: 700, fontSize: '0.75rem' }}>1.4× Surge</Typography>
+                    </Box>
+                    <Box sx={{ flex: 1, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 1.5, p: 1, border: '1px solid rgba(255,255,255,0.12)' }}>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.55rem', display: 'block' }}>Route AI</Typography>
+                      <Typography variant="caption" sx={{ color: 'rgba(16,185,129,0.9)', fontWeight: 700, fontSize: '0.75rem' }}>Optimized ✓</Typography>
+                    </Box>
+                    <Box sx={{ flex: 1, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 1.5, p: 1, border: '1px solid rgba(255,255,255,0.12)' }}>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.55rem', display: 'block' }}>Avg Wait</Typography>
+                      <Typography variant="caption" sx={{ color: 'rgba(59,130,246,0.9)', fontWeight: 700, fontSize: '0.75rem' }}>4.2 min</Typography>
+                    </Box>
+                  </Box>
                 </Box>
               </m.div>
             </Grid>
@@ -226,9 +316,9 @@ const LandingPage = () => {
                 Product
               </Typography>
               <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-                <li><Button component={Link} to="/not-found" color="inherit">Features</Button></li>
-                <li><Button component={Link} to="/not-found" color="inherit">Pricing</Button></li>
-                <li><Button component={Link} to="/not-found" color="inherit">Integrations</Button></li>
+                <li><Button component={Link} to="/dashboard" color="inherit">Dashboard</Button></li>
+                <li><Button component={Link} to="/dashboard/analytics" color="inherit">Analytics</Button></li>
+                <li><Button component={Link} to="/dashboard/map" color="inherit">Map View</Button></li>
               </Box>
             </Grid>
             <Grid item xs={6} sm={4} md={2}>
@@ -236,19 +326,19 @@ const LandingPage = () => {
                 Resources
               </Typography>
               <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-                <li><Button component={Link} to="/not-found" color="inherit">Blog</Button></li>
-                <li><Button component={Link} to="/not-found" color="inherit">Documentation</Button></li>
-                <li><Button component={Link} to="/not-found" color="inherit">Support</Button></li>
+                <li><Button component="a" href="https://github.com" target="_blank" rel="noopener noreferrer" color="inherit">GitHub</Button></li>
+                <li><Button component={Link} to="/dashboard/settings" color="inherit">Settings</Button></li>
+                <li><Button component={Link} to="/register" color="inherit">Get Started</Button></li>
               </Box>
             </Grid>
             <Grid item xs={12} sm={4} md={2}>
               <Typography variant="subtitle1" gutterBottom>
-                Company
+                Account
               </Typography>
               <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-                <li><Button component={Link} to="/not-found" color="inherit">About Us</Button></li>
-                <li><Button component={Link} to="/not-found" color="inherit">Careers</Button></li>
-                <li><Button component={Link} to="/not-found" color="inherit">Contact</Button></li>
+                <li><Button component={Link} to="/login" color="inherit">Sign In</Button></li>
+                <li><Button component={Link} to="/register" color="inherit">Register</Button></li>
+                <li><Button component={Link} to="/dashboard/profile" color="inherit">Profile</Button></li>
               </Box>
             </Grid>
           </Grid>
