@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { Box, Button, Typography, Paper, useTheme } from '@mui/material';
 import { Error as ErrorIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import { handleUnhandledError, addBreadcrumb, isSentryAvailable } from '../../utils/sentry';
+import { generateErrorBoundaryMessage } from '../../utils/errorMessages';
+import { ErrorBoundaryFallback } from './ErrorComponents';
 
 /**
  * ErrorBoundary component to catch JavaScript errors in child components
@@ -46,7 +48,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     this.logErrorToService(error, errorInfo);
     
     this.setState({
-      error,
+      error: error || new Error('Unknown error'),
       errorInfo,
       hasError: true
     });
@@ -142,107 +144,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-/**
- * Default fallback UI for the ErrorBoundary
- */
-const ErrorBoundaryFallback = ({
-  error,
-  errorInfo,
-  onReset,
-  showReset = true,
-  showDetails = false,
-  ...props
-}) => {
-  const theme = useTheme();
-  const [showStack, setShowStack] = React.useState(false);
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        p: 3,
-        backgroundColor: theme.palette.background.default,
-        ...props.sx,
-      }}
-      {...props}
-    >
-      <Paper
-        elevation={3}
-        sx={{
-          p: 4,
-          maxWidth: 600,
-          width: '100%',
-          textAlign: 'center',
-          borderRadius: 2,
-        }}
-      >
-        <ErrorIcon 
-          color="error" 
-          sx={{ fontSize: 60, mb: 2 }} 
-        />
-        
-        <Typography variant="h4" gutterBottom>
-          Something went wrong
-        </Typography>
-        
-        <Typography color="textSecondary" paragraph>
-          We're sorry for the inconvenience. An error has occurred and we're working to fix it.
-        </Typography>
-
-        {showDetails && error && (
-          <Box 
-            sx={{ 
-              mt: 3, 
-              p: 2, 
-              backgroundColor: theme.palette.background.paper,
-              borderRadius: 1,
-              textAlign: 'left',
-              maxHeight: 200,
-              overflow: 'auto',
-              fontFamily: 'monospace',
-              fontSize: '0.8rem',
-            }}
-          >
-            <Typography variant="subtitle2" gutterBottom>
-              {error.toString()}
-            </Typography>
-            
-            {showStack && errorInfo && errorInfo.componentStack && (
-              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                {errorInfo.componentStack}
-              </pre>
-            )}
-            
-            <Button 
-              size="small" 
-              onClick={() => setShowStack(!showStack)}
-              sx={{ mt: 1 }}
-            >
-              {showStack ? 'Hide details' : 'Show details'}
-            </Button>
-          </Box>
-        )}
-        
-        {showReset && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={onReset}
-            startIcon={<RefreshIcon />}
-            sx={{ mt: 3 }}
-          >
-            Try Again
-          </Button>
-        )}
-      </Paper>
-    </Box>
-  );
-};
-
-export { ErrorBoundary, ErrorBoundaryFallback };
+export { ErrorBoundary };
 
 export default ErrorBoundary;

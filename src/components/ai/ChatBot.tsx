@@ -10,6 +10,7 @@ import {
 import aiService from '../../services/aiService';
 import { useChatStore } from '../../stores/chatStore';
 import { useLoadingState } from '../../hooks/useLoadingState';
+import { generateAiErrorMessage } from '../../utils/errorMessages';
 import MarkdownMessage from './MarkdownMessage';
 import ConversationHistory from './ConversationHistory';
 
@@ -105,13 +106,19 @@ const ChatBot = ({ open, onClose }) => {
     } catch (error) {
       console.error('Chat error:', error);
       
-      let errorText = "Sorry, I'm having trouble connecting to the AI service.";
+      // Generate user-friendly error message
+      const userError = generateAiErrorMessage('Google AI', 'sending chat message', error);
       
-      // Check if it's a quota error
-      if (error.message?.includes('quota') || error.message?.includes('429')) {
-        errorText = "⚠️ API Quota Exceeded\n\nThe free tier of Google Gemini allows 20 requests per day, and we've reached that limit.\n\nSolutions:\n• Wait 24 hours for the quota to reset\n• Create a new API key at https://makersuite.google.com/app/apikey\n• Upgrade to a paid tier for higher limits\n\nFor now, I'll provide basic assistance with mock responses.";
-      } else {
-        errorText = "Sorry, I'm having trouble connecting to the AI service. Please make sure:\n\n1. Your VITE_GOOGLE_AI_API_KEY is set in the .env file\n2. You've restarted the dev server after adding the API key\n3. Your API key is valid\n\nCheck the browser console for more details.";
+      let errorText = userError.message;
+      
+      // Add suggestions
+      if (userError.suggestions.length > 0) {
+        errorText += '\n\nSuggestions:\n' + userError.suggestions.map(s => `• ${s}`).join('\n');
+      }
+      
+      // Add error code if available
+      if (userError.errorCode) {
+        errorText += `\n\nError Code: ${userError.errorCode}`;
       }
       
       const errorMessage = {
@@ -120,6 +127,7 @@ const ChatBot = ({ open, onClose }) => {
         isUser: false,
         timestamp: new Date(),
         isError: true,
+        userError: userError, // Store for potential future use
       };
       addMessage(conversation.id, errorMessage);
     }
