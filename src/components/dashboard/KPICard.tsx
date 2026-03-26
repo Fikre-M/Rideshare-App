@@ -1,10 +1,21 @@
-// @ts-nocheck
-import { Box, Typography, Skeleton } from '@mui/material';
+﻿import { Box, Typography, Skeleton } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import { styled } from '@mui/material/styles';
 
-const StatCard = styled(Box)(({ theme, color = 'primary' }) => ({
+type PaletteColor = 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
+
+interface KPICardProps {
+  title: string;
+  value: string | number;
+  change?: number;
+  loading?: boolean;
+  color?: PaletteColor;
+}
+
+const StatCard = styled(Box, {
+  shouldForwardProp: (p) => p !== 'color',
+})<{ color?: PaletteColor }>(({ theme, color = 'primary' }) => ({
   backgroundColor: theme.palette.background.paper,
   borderRadius: theme.shape.borderRadius,
   padding: theme.spacing(1.5),
@@ -17,19 +28,12 @@ const StatCard = styled(Box)(({ theme, color = 'primary' }) => ({
     boxShadow: theme.shadows[4],
   },
   borderLeft: `4px solid ${theme.palette[color].main}`,
-  [theme.breakpoints.down('sm')]: {
-    padding: theme.spacing(1),
-    minHeight: 90,
-  },
-  [theme.breakpoints.down('xs')]: {
-    padding: theme.spacing(0.75),
-    minHeight: 80,
-  },
+  [theme.breakpoints.down('sm')]: { padding: theme.spacing(1), minHeight: 90 },
 }));
 
-const KPICard = ({ title, value, change, loading = false, color = 'primary' }) => {
-  const isPositive = change >= 0;
-  
+const KPICard = ({ title, value, change, loading = false, color = 'primary' }: KPICardProps) => {
+  const isPositive = (change ?? 0) >= 0;
+
   return (
     <StatCard color={color}>
       {loading ? (
@@ -39,44 +43,27 @@ const KPICard = ({ title, value, change, loading = false, color = 'primary' }) =
         </>
       ) : (
         <>
-          <Typography 
-            variant="subtitle2" 
-            color="text.secondary" 
+          <Typography
+            variant="subtitle2"
+            color="text.secondary"
             gutterBottom
-            sx={{
-              fontSize: { xs: '0.75rem', sm: '0.875rem' },
-              lineHeight: 1.2,
-            }}
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, lineHeight: 1.2 }}
           >
             {title}
           </Typography>
           <Box display="flex" alignItems="flex-end" gap={1}>
-            <Typography 
-              variant="h4" 
-              component="div" 
+            <Typography
+              variant="h4"
+              component="div"
               fontWeight="bold"
-              sx={{
-                fontSize: { xs: '1.25rem', sm: '1.5rem' },
-                lineHeight: 1.1,
-              }}
+              sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, lineHeight: 1.1 }}
             >
               {typeof value === 'number' ? value.toLocaleString() : value}
             </Typography>
             {change !== undefined && (
-              <Box
-                display="flex"
-                alignItems="center"
-                color={isPositive ? 'success.main' : 'error.main'}
-                mb={0.5}
-              >
-                {isPositive ? (
-                  <TrendingUpIcon fontSize="small" />
-                ) : (
-                  <TrendingDownIcon fontSize="small" />
-                )}
-                <Typography variant="body2" ml={0.5}>
-                  {Math.abs(change)}%
-                </Typography>
+              <Box display="flex" alignItems="center" color={isPositive ? 'success.main' : 'error.main'} mb={0.5}>
+                {isPositive ? <TrendingUpIcon fontSize="small" /> : <TrendingDownIcon fontSize="small" />}
+                <Typography variant="body2" ml={0.5}>{Math.abs(change)}%</Typography>
               </Box>
             )}
           </Box>

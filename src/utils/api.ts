@@ -1,8 +1,7 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+﻿import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { toast } from 'react-hot-toast';
 import config from '../utils/config';
 
-// Create axios instance with default config
 const api: AxiosInstance = axios.create({
   baseURL: config.api.baseUrl,
   timeout: config.api.timeout,
@@ -14,59 +13,56 @@ const api: AxiosInstance = axios.create({
   withCredentials: false,
 });
 
-/**
- * Request interceptor for API calls
- */
+// ── Request interceptor ───────────────────────────────────────────────────
 api.interceptors.request.use(
   (reqConfig: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem(config.auth.tokenKey);
-    if (token) {
-      reqConfig.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) reqConfig.headers.Authorization = `Bearer ${token}`;
     reqConfig.headers['X-Request-Timestamp'] = new Date().toISOString();
-    if (process.env.NODE_ENV === "development") {
-      console.log(`[API] ${reqConfig.method?.toUpperCase()} ${reqConfig.url}`, {
-        params: reqConfig.params,
-        data: reqConfig.data,
-      });
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[API] ${reqConfig.method?.toUpperCase()} ${reqConfig.url}`, { params: reqConfig.params, data: reqConfig.data });
     }
     return reqConfig;
   },
   (error: unknown) => {
-    if (process.env.NODE_ENV === "development") {
-      console.error("[API] Request Error:", error);
-    }
+    if (process.env.NODE_ENV === 'development') console.error('[API] Request Error:', error);
     return Promise.reject(error);
   }
 );
 
-/**
- * Response interceptor for API calls
- */
+// ── Response interceptor (single, combined) ───────────────────────────────
+// Handles: success unwrapping, error toasts, 401 token refresh, redirect
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    if (process.env.NODE_ENV === "development") {
-      console.log(
-        `[API] ${response.config.method?.toUpperCase()} ${response.config.url}`,
-        { status: response.status, data: response.data },
-      );
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[API] ${response.config.method?.toUpperCase()} ${response.config.url}`, { status: response.status, data: response.data });
     }
+    // Unwrap .data so callers receive the payload directly
     return response.data;
   },
-  (error: any) => {
+  async (error: any) => {
+    const originalRequest = error.config;
     const { response, config: errConfig } = error;
-    const errorMessage = response?.data?.message || error.message || 'An error occurred';
     const status: number | undefined = response?.status;
+    const errorMessage = response?.data?.message || error.message || 'An error occurred';
 
-    if (process.env.NODE_ENV === "development") {
-      console.error("[API] Response Error:", {
-        url: errConfig?.url,
-        status,
-        error: errorMessage,
-        response: response?.data,
-      });
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[API] Response Error:', { url: errConfig?.url, status, error: errorMessage, response: response?.data });
     }
 
+    // ── Token refresh on first 401 ────────────────────────────────────────
+    if (status === 401 && !originalRequest?._retry) {
+      originalRequest._retry = true;
+      try {
+        const newToken = await refreshToken();
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api(originalRequest);
+      } catch {
+        // refresh failed — fall through to redirect below
+      }
+    }
+
+    // ── Status-based toasts & redirects ──────────────────────────────────
     if (status === 401) {
       localStorage.removeItem(config.auth.tokenKey);
       localStorage.removeItem(config.auth.refreshTokenKey);
@@ -86,88 +82,50 @@ api.interceptors.response.use(
       toast.error('Unable to connect to the server. Please check your internet connection.');
     }
 
-    return Promise.reject({
-      status,
-      message: errorMessage,
-      errors: response?.data?.errors || {},
-      code: response?.data?.code || 'UNKNOWN_ERROR',
-    });
+    return Promise.reject({ status, message: errorMessage, errors: response?.data?.errors ?? {}, code: response?.data?.code ?? 'UNKNOWN_ERROR' });
   }
 );
 
-// Helper function to handle file uploads
+// ── Helpers ───────────────────────────────────────────────────────────────
+
 export const uploadFile = async (
   file: File,
   url = '/upload',
   fieldName = 'file',
   onUploadProgress?: (percent: number) => void
-): Promise<any> => {
+): Promise<unknown> => {
   const formData = new FormData();
   formData.append(fieldName, file);
-  
   return api.post(url, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
-    onUploadProgress: (progressEvent) => {
-      if (onUploadProgress && progressEvent.lengthComputable && progressEvent.total) {
-        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        onUploadProgress(percentCompleted);
+    onUploadProgress: (e) => {
+      if (onUploadProgress && e.lengthComputable && e.total) {
+        onUploadProgress(Math.round((e.loaded * 100) / e.total));
       }
     },
   });
 };
 
-// Helper function to handle token refresh
 export const refreshToken = async (): Promise<string> => {
   const storedRefreshToken = localStorage.getItem(config.auth.refreshTokenKey);
-  if (!storedRefreshToken) {
-    throw new Error('No refresh token available');
-  }
-  
+  if (!storedRefreshToken) throw new Error('No refresh token available');
+
   try {
-    const response = await api.post('/auth/refresh-token', { refreshToken: storedRefreshToken });
-    const { token, expiresIn } = (response as any).data ?? response;
-    
+    // Use a raw axios call (not the intercepted instance) to avoid infinite loops
+    const response = await axios.post(`${config.api.baseUrl}/auth/refresh-token`, { refreshToken: storedRefreshToken });
+    const { token, expiresIn } = response.data as { token: string; expiresIn?: number };
     localStorage.setItem(config.auth.tokenKey, token);
     if (expiresIn) {
-      const expiryTime = new Date().getTime() + expiresIn * 1000;
-      localStorage.setItem(config.auth.tokenExpiryKey, expiryTime.toString());
+      localStorage.setItem(config.auth.tokenExpiryKey, String(Date.now() + expiresIn * 1000));
     }
-    
-    return token as string;
+    return token;
   } catch (error) {
     localStorage.removeItem(config.auth.tokenKey);
     localStorage.removeItem(config.auth.refreshTokenKey);
     localStorage.removeItem(config.auth.tokenExpiryKey);
-    if (!window.location.pathname.includes('/login')) {
-      window.location.href = '/login';
-    }
+    if (!window.location.pathname.includes('/login')) window.location.href = '/login';
     throw error;
   }
 };
-
-// Add a request interceptor to handle token refresh
-api.interceptors.response.use(
-  (response) => response,
-  async (error: any) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const newToken = await refreshToken();
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        localStorage.removeItem(config.auth.tokenKey);
-        localStorage.removeItem(config.auth.refreshTokenKey);
-        localStorage.removeItem(config.auth.tokenExpiryKey);
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login';
-        }
-        return Promise.reject(refreshError);
-      }
-    }
-    return Promise.reject(error);
-  }
-);
 
 export default api;
