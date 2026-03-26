@@ -63,7 +63,12 @@ const Dashboard = () => {
 
   return (
     <PageContainer>
-      <PageHeader title="Operations Dashboard" subtitle="Real-time overview of your transportation operations" />
+      <PageHeader 
+        title="Operations Dashboard" 
+        subtitle="Real-time overview of your transportation operations"
+        actions={null}
+        breadcrumbs={null}
+      />
       <Box mb={2}>
         <SectionTitle variant="h6">Key Performance Indicators</SectionTitle>
         <m.div variants={containerVariants} initial="hidden" animate="visible">

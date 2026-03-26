@@ -3,7 +3,7 @@ import type { Config } from 'jest';
 const config: Config = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^import\\.meta\\.env$': '<rootDir>/src/__mocks__/env.ts',
   },
@@ -35,9 +35,6 @@ const config: Config = {
     '<rootDir>/src/**/__tests__/**/*.{ts,tsx,js,jsx}',
     '<rootDir>/src/**/*.{test,spec}.{ts,tsx,js,jsx}',
   ],
-  moduleNameMapping: {
-    '^@/(.*)$': '<rootDir>/src/$1',
-  },
   testTimeout: 10000,
 };
 

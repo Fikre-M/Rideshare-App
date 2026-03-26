@@ -23,7 +23,7 @@ import {
   Palette as ThemeIcon,
   Save as SaveIcon,
 } from '@mui/icons-material';
-import { useThemeStore } from '../stores/themeStore';
+import { useThemeStore, type ThemeMode } from '../stores/themeStore';
 
 const Settings = () => {
   const { mode: themeMode, setMode: setThemeMode } = useThemeStore();
@@ -54,8 +54,8 @@ const Settings = () => {
     setSettings({ ...settings, preferences: { ...settings.preferences, [field]: event.target.value } });
   };
 
-  const handleThemeChange = (event: SelectChangeEvent) => {
-    setThemeMode(event.target.value);
+  const handleThemeChange = (event: SelectChangeEvent<ThemeMode>) => {
+    setThemeMode(event.target.value as ThemeMode);
   };
 
   const handleSave = () => {
@@ -72,6 +72,7 @@ const Settings = () => {
             Save Changes
           </Button>
         }
+        breadcrumbs={null}
       />
 
       <Grid container spacing={3}>
