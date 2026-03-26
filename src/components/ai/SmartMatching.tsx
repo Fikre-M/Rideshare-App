@@ -65,6 +65,7 @@ const SmartMatching = () => {
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [isMatching, setIsMatching] = useState(false);
   const [error, setError] = useState(null);
+  const [confirmSnackbar, setConfirmSnackbar] = useState({ open: false, message: '' });
 
   const findMatches = async () => {
     setIsMatching(true);
@@ -307,7 +308,10 @@ const SmartMatching = () => {
                     fullWidth
                     startIcon={<CheckIcon />}
                     onClick={() => {
-                      alert(`Ride confirmed with ${matching.matchedDriver.name}! Your driver will arrive in ${matching.matchedDriver.eta} minutes.`);
+                      setConfirmSnackbar({
+                        open: true,
+                        message: `Ride confirmed with ${matching.matchedDriver.name}! Your driver will arrive in ${matching.matchedDriver.eta} minutes.`,
+                      });
                     }}
                     sx={{
                       background: 'linear-gradient(135deg, #1976d2 0%, #4caf50 100%)',
@@ -419,6 +423,23 @@ const SmartMatching = () => {
           </Grid>
         </m.div>
       )}
+
+      {/* Ride confirmation snackbar */}
+      <Snackbar
+        open={confirmSnackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setConfirmSnackbar({ open: false, message: '' })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setConfirmSnackbar({ open: false, message: '' })}
+          severity="success"
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {confirmSnackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
