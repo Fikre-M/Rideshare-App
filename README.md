@@ -1,9 +1,11 @@
 # AI-Powered Rideshare Platform
 
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://ai-rideshare.vercel.app)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://rideshareapp-two.vercel.app)
 [![React](https://img.shields.io/badge/React-18-blue)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
 [![MUI](https://img.shields.io/badge/MUI-v5-007FFF)](https://mui.com)
+
+> **🚀 Live Demo: [https://rideshareapp-two.vercel.app](https://rideshareapp-two.vercel.app)**
 
 A modern, intelligent rideshare application built with React and powered by artificial intelligence. Features smart driver-passenger matching, dynamic pricing, route optimization, demand prediction, and predictive analytics.
 
