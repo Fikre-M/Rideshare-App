@@ -86,9 +86,28 @@ class AIService {
   private isMapboxAvailable(): boolean {
     try {
       const token = useApiKeyStore.getState().getKey('mapbox');
-      return !!token && token !== 'your_mapbox_access_token_here';
+      return !!token && token !== 'your_mapbox_token_here';
     } catch {
       return false;
+    }
+  }
+
+  // Public methods for checking service availability
+  public isServiceAvailable(service: 'openai' | 'mapbox' | 'googleai'): boolean {
+    switch (service) {
+      case 'openai':
+        return this.isOpenAIAvailable();
+      case 'mapbox':
+        return this.isMapboxAvailable();
+      case 'googleai':
+        try {
+          const apiKey = useApiKeyStore.getState().getKey('googleAI');
+          return !!apiKey && apiKey !== 'your_google_ai_api_key_here';
+        } catch {
+          return false;
+        }
+      default:
+        return false;
     }
   }
 

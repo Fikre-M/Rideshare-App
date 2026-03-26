@@ -255,11 +255,57 @@ const AppRoutes = () => {
       <CommandPalette 
         open={commandPaletteOpen} 
         onClose={() => setCommandPaletteOpen(false)}
-        onAICommand={(command) => {
-          // TODO: Implement AI command routing
-          // For now, just log in dev mode
-          if (import.meta.env.DEV) {
-            console.log('AI Command:', command);
+        onAICommand={async (command) => {
+          try {
+            // TODO: Implement full AI command routing after fixing import issues
+            // For now, handle basic commands
+            if (command === 'chat') {
+              setChatBotOpen(true);
+              const chatStore = useChatStore.getState();
+              if (!chatStore.activeConversationId) {
+                chatStore.createConversation();
+              }
+              chatStore.addMessage({
+                id: Date.now().toString(),
+                content: 'Hello! I\'m your AI assistant. How can I help you with your rideshare operations today?',
+                sender: 'ai',
+                timestamp: new Date().toISOString(),
+                type: 'text'
+              });
+            } else if (command === 'help') {
+              setChatBotOpen(true);
+              const chatStore = useChatStore.getState();
+              if (!chatStore.activeConversationId) {
+                chatStore.createConversation();
+              }
+              chatStore.addMessage({
+                id: Date.now().toString(),
+                content: `Available AI Commands:
+• Smart Matching - AI-powered driver-passenger matching
+• Dynamic Pricing - Real-time surge pricing calculator
+• Route Optimization - AI-optimized route planning
+• Predictive Analytics - Business forecasting insights
+• Demand Prediction - Location-based demand forecasting
+• Chat - Talk to AI assistant
+
+Keyboard Shortcuts:
+• Ctrl+K (Cmd+K) - Open command palette
+• Ctrl+/ (Cmd+/) - Open AI chat`,
+                sender: 'ai',
+                timestamp: new Date().toISOString(),
+                type: 'text'
+              });
+            } else {
+              // Navigate to AI demo for other commands
+              navigate('/dashboard/ai-demo?feature=' + command);
+            }
+            
+            // Log in development
+            if (import.meta.env.DEV) {
+              console.log('AI Command:', command);
+            }
+          } catch (error) {
+            console.error('AI Command Error:', error);
           }
         }}
       />
