@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Box, Button, Typography, Paper, useTheme } from '@mui/material';
 import { Error as ErrorIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import { handleUnhandledError, addBreadcrumb, isSentryAvailable } from '../../utils/sentry';
 
 /**
  * ErrorBoundary component to catch JavaScript errors in child components
@@ -52,16 +53,38 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   logErrorToService = (error: Error, errorInfo: React.ErrorInfo) => {
-    // In a real app, you would log the error to an error reporting service
-    // like Sentry, LogRocket, etc.
+    // Log the error to console
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     
-    // Example with Sentry (uncomment and configure if using Sentry)
-    // Sentry.withScope(scope => {
-    //   scope.setExtras(errorInfo);
-    //   const eventId = Sentry.captureException(error);
-    //   this.setState({ eventId });
-    // });
+    // Add breadcrumb for context
+    addBreadcrumb({
+      message: 'React Error Boundary triggered',
+      category: 'error.boundary',
+      level: 'error',
+      data: {
+        componentStack: errorInfo.componentStack,
+        errorBoundary: true,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
+    // Handle the error with Sentry if available
+    if (isSentryAvailable()) {
+      handleUnhandledError(error, errorInfo);
+      
+      // Generate event ID for user reference
+      const eventId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      this.setState({ eventId });
+    } else {
+      // Fallback: Generate local error ID
+      const eventId = `local_error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      this.setState({ eventId });
+    }
+    
+    // Call custom error handler if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
   };
 
   handleReset = () => {

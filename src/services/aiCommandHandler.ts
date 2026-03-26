@@ -6,6 +6,7 @@
 import aiService from '../services/aiService';
 import { useChatStore } from '../stores/chatStore';
 import { useApiKeyStore } from '../stores/apiKeyStore';
+import { trackAICommand, trackApiError, addBreadcrumb } from '../utils/sentry';
 
 export type AICommand = 
   | 'smart-matching'
@@ -32,40 +33,83 @@ class AICommandHandler {
    * Handle AI command from command palette
    */
   async handleCommand(command: AICommand, context?: any): Promise<AICommandResult> {
+    const startTime = Date.now();
+    
+    // Add breadcrumb for command start
+    addBreadcrumb({
+      message: `AI Command: ${command}`,
+      category: 'ai.command',
+      level: 'info',
+      data: { command, context, timestamp: new Date().toISOString() },
+    });
+
     try {
+      let result: AICommandResult;
+
       switch (command) {
         case 'smart-matching':
-          return await this.handleSmartMatching();
+          result = await this.handleSmartMatching();
+          break;
         
         case 'dynamic-pricing':
-          return await this.handleDynamicPricing();
+          result = await this.handleDynamicPricing();
+          break;
         
         case 'route-optimizer':
-          return await this.handleRouteOptimization();
+          result = await this.handleRouteOptimization();
+          break;
         
         case 'predictive-analytics':
-          return await this.handlePredictiveAnalytics();
+          result = await this.handlePredictiveAnalytics();
+          break;
         
         case 'demand-prediction':
-          return await this.handleDemandPrediction();
+          result = await this.handleDemandPrediction();
+          break;
         
         case 'chat':
-          return this.handleChat();
+          result = this.handleChat();
+          break;
         
         case 'help':
-          return this.handleHelp();
+          result = this.handleHelp();
+          break;
         
         case 'status':
-          return await this.handleStatus();
+          result = await this.handleStatus();
+          break;
         
         default:
-          return {
+          result = {
             success: false,
             message: `Unknown command: ${command}`
           };
       }
+
+      // Track successful command
+      trackAICommand(command, true);
+      
+      // Add performance tracking
+      const duration = Date.now() - startTime;
+      addBreadcrumb({
+        message: `AI Command completed: ${command}`,
+        category: 'ai.command',
+        level: 'info',
+        data: { command, duration, success: result.success },
+      });
+
+      return result;
     } catch (error) {
       console.error('AI Command Handler Error:', error);
+      
+      // Track failed command
+      trackAICommand(command, false, error instanceof Error ? error.message : 'Unknown error');
+      
+      // Track API error if it's an API-related error
+      if (error instanceof Error && (error.message.includes('API') || error.message.includes('fetch'))) {
+        trackApiError('ai-command', error);
+      }
+
       return {
         success: false,
         message: `Failed to execute command: ${error instanceof Error ? error.message : 'Unknown error'}`

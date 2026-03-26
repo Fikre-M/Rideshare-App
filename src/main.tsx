@@ -13,16 +13,24 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import 'leaflet/dist/leaflet.css'; // Leaflet CSS for maps
+import { initSentry, handleUnhandledError, handleUnhandledRejection } from './utils/sentry';
+
+// Initialize Sentry error tracking
+initSentry();
 
 // Global error handling
 window.addEventListener('error', (event) => {
   console.error('Unhandled error:', event.error);
-  // TODO: Send to error tracking service (Sentry, etc.)
+  handleUnhandledError(event.error, { 
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+  });
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
-  // TODO: Send to error tracking service (Sentry, etc.)
+  handleUnhandledRejection(event);
 });
 
 const container = document.getElementById('root');
