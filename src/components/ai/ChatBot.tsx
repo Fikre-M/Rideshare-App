@@ -9,6 +9,7 @@ import {
 } from '@mui/icons-material';
 import aiService from '../../services/aiService';
 import { useChatStore } from '../../stores/chatStore';
+import { useLoadingState } from '../../hooks/useLoadingState';
 import MarkdownMessage from './MarkdownMessage';
 import ConversationHistory from './ConversationHistory';
 
@@ -26,8 +27,18 @@ const ChatBot = ({ open, onClose }) => {
   } = useChatStore();
   
   const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const chatLoading = useLoadingState({
+    maxRetries: 3,
+    retryDelay: 1000,
+    onSuccess: (data) => {
+      console.log('Chat message sent successfully');
+    },
+    onError: (error) => {
+      console.error('Chat error:', error);
+    }
+  });
+  
   const conversation = getActiveConversation();
 
   // Auto-scroll to bottom
@@ -54,7 +65,7 @@ const ChatBot = ({ open, onClose }) => {
   }, [open, conversation, createConversation]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading || !conversation) return;
+    if (!inputValue.trim() || chatLoading.isLoading || !conversation) return;
 
     const userMessage = {
       id: Date.now(),
@@ -64,13 +75,22 @@ const ChatBot = ({ open, onClose }) => {
     };
 
     addMessage(conversation.id, userMessage);
+    const messageText = inputValue;
     setInputValue('');
-    setIsLoading(true);
 
     try {
-      const response = await aiService.sendChatMessage(inputValue, {
-        conversationId: conversation.id,
-      });
+      const response = await chatLoading.execute(
+        () => aiService.sendChatMessage(messageText, {
+          conversationId: conversation.id,
+        }),
+        (error) => {
+          // Retry on network errors and rate limits
+          return error.code === 'ECONNRESET' || 
+                 error.code === 'ENOTFOUND' || 
+                 error.response?.status === 429 ||
+                 error.response?.status >= 500;
+        }
+      );
 
       const botMessage = {
         id: Date.now() + 1,
@@ -102,8 +122,6 @@ const ChatBot = ({ open, onClose }) => {
         isError: true,
       };
       addMessage(conversation.id, errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -117,6 +135,11 @@ const ChatBot = ({ open, onClose }) => {
       event.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleRetry = () => {
+    chatLoading.reset();
+    // Could trigger a retry of the last message here
   };
 
   const handleCopyMessage = (text) => {
@@ -425,7 +448,7 @@ const ChatBot = ({ open, onClose }) => {
             </m.div>
           ))}
           
-          {isLoading && (
+          {chatLoading.isLoading && (
             <m.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -518,7 +541,7 @@ const ChatBot = ({ open, onClose }) => {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
-                disabled={isLoading}
+                disabled={chatLoading.isLoading}
                 rows={1}
                 style={{
                   width: '100%',
@@ -549,15 +572,15 @@ const ChatBot = ({ open, onClose }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isLoading}
+              disabled={!inputValue.trim() || chatLoading.isLoading}
               style={{
                 padding: '12px',
                 background: 'linear-gradient(to right, #3b82f6, #8b5cf6)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '16px',
-                cursor: inputValue.trim() && !isLoading ? 'pointer' : 'not-allowed',
-                opacity: inputValue.trim() && !isLoading ? 1 : 0.5,
+                cursor: inputValue.trim() && !chatLoading.isLoading ? 'pointer' : 'not-allowed',
+                opacity: inputValue.trim() && !chatLoading.isLoading ? 1 : 0.5,
                 transition: 'all 0.2s ease',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 display: 'flex',
@@ -565,7 +588,7 @@ const ChatBot = ({ open, onClose }) => {
                 justifyContent: 'center'
               }}
               onMouseEnter={(e) => {
-                if (inputValue.trim() && !isLoading) {
+                if (inputValue.trim() && !chatLoading.isLoading) {
                   e.target.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
                 }
               }}
