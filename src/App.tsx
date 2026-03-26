@@ -256,8 +256,11 @@ const AppRoutes = () => {
         open={commandPaletteOpen} 
         onClose={() => setCommandPaletteOpen(false)}
         onAICommand={(command) => {
-          console.log('AI Command:', command);
-          // Handle AI commands here
+          // TODO: Implement AI command routing
+          // For now, just log in dev mode
+          if (import.meta.env.DEV) {
+            console.log('AI Command:', command);
+          }
         }}
       />
       
