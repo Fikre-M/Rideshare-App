@@ -203,23 +203,6 @@ class AnalyticsService {
     value?: number,
     properties?: Record<string, any>
   ): void {
-    if (!this.isInitialized) {
-      console.warn('Analytics not initialized. Event queued:', { category, action, label });
-      // Queue event for later processing
-      this.eventQueue.push({
-        event: 'custom',
-        category,
-        action,
-        label,
-        value,
-        properties,
-        timestamp: Date.now(),
-        userId: this.userId || undefined,
-        sessionId: this.sessionId,
-      });
-      return;
-    }
-
     const event: AnalyticsEvent = {
       event: 'custom',
       category,
@@ -231,6 +214,11 @@ class AnalyticsService {
       userId: this.userId || undefined,
       sessionId: this.sessionId,
     };
+
+    if (!this.isInitialized) {
+      this.eventQueue.push(event);
+      return;
+    }
 
     this.eventQueue.push(event);
     console.log('Analytics event tracked:', event);

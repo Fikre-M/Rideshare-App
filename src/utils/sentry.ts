@@ -5,6 +5,7 @@
 
 import * as Sentry from '@sentry/react';
 import { BrowserTracing } from '@sentry/tracing';
+import React from 'react';
 
 // Sentry DSN - Should be environment variable in production
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || process.env.REACT_APP_SENTRY_DSN;
@@ -22,9 +23,9 @@ const debug = environment === 'development';
  * Initialize Sentry error tracking
  */
 export const initSentry = (): void => {
-  // Only initialize in production or if DSN is provided
+  // Only initialize in production or if DSN is explicitly provided
   if (!SENTRY_DSN && environment !== 'production') {
-    console.log('Sentry: Not initialized (no DSN provided)');
+    console.info('Sentry: DSN not provided, skipping initialization in development');
     return;
   }
 
@@ -43,14 +44,7 @@ export const initSentry = (): void => {
     // Integrations
     integrations: [
       new BrowserTracing({
-        // Custom tracing options
-        routingInstrumentation: Sentry.reactRouterV6Instrumentation(
-          React.useEffect,
-          React.useLocation,
-          React.useNavigationType,
-          React.createRoutesFromChildren,
-          React.matchRoutes
-        ),
+        tracingOrigins: ['localhost', /^\//],
       }),
     ],
     
@@ -97,13 +91,10 @@ export const initSentry = (): void => {
     ignoreErrors: [
       // ResizeObserver loop limit exceeded (common in browsers)
       'ResizeObserver loop limit exceeded',
-      // Non-error promise rejections to handle
       'Non-Error promise rejection captured',
-      // Network errors that are not critical
-      'Network Error',
+      // Network errors that are not actionable
+      'Network request failed',
       'Failed to fetch',
-      // Chrome extension errors
-      /chrome-extension:\/\//i,
       // Development-only errors
       'Warning: ReactDOM.render is deprecated',
     ],
