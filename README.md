@@ -1,5 +1,6 @@
 # AI-Powered Rideshare Platform
 
+[![CI](https://github.com/Fikre-M/transportation/actions/workflows/ci.yml/badge.svg)](https://github.com/Fikre-M/transportation/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://rideshareapp-two.vercel.app)
 [![React](https://img.shields.io/badge/React-18-blue)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)

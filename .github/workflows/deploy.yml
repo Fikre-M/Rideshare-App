@@ -1,316 +1,36 @@
-name: Deploy to Production
+name: Deploy
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Deployment environment'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - staging
-
-env:
-  NODE_VERSION: '20'
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
-  # Job 1: Build Production Bundle
-  build:
-    name: Build Production Bundle
+  deploy:
+    name: Deploy to Vercel
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    timeout-minutes: 10
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run security audit
-        run: npm audit --audit-level=high
-        continue-on-error: false
-
-      - name: Build production bundle
+      - name: Build
         run: npm run build
         env:
           NODE_ENV: production
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VITE_WS_URL: ${{ secrets.VITE_WS_URL }}
-
-      - name: Generate build info
-        run: |
-          echo "{
-            \"version\": \"${{ github.sha }}\",
-            \"buildTime\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
-            \"branch\": \"${{ github.ref_name }}\",
-            \"commit\": \"${{ github.sha }}\",
-            \"author\": \"${{ github.actor }}\"
-          }" > dist/build-info.json
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-build
-          path: dist/
-          retention-days: 30
-
-  # Job 2: Deploy to Vercel
-  deploy-vercel:
-    name: Deploy to Vercel
-    runs-on: ubuntu-latest
-    needs: build
-    timeout-minutes: 10
-    environment:
-      name: ${{ github.event.inputs.environment || 'production' }}
-      url: ${{ steps.deploy.outputs.url }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: production-build
-          path: dist/
-
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel
-        id: deploy
-        run: |
-          if [[ "${{ github.event.inputs.environment }}" == "staging" ]]; then
-            URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }})
-          else
-            URL=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }})
-          fi
-          echo "url=$URL" >> $GITHUB_OUTPUT
-          echo "Deployed to: $URL"
-
-      - name: Comment deployment URL on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: amondnet/vercel-action@v25
         with:
-          script: |
-            const deploymentUrl = '${{ steps.deploy.outputs.url }}';
-            const comment = `## 🚀 Deployment Successful!
-            
-            **Environment:** ${{ github.event.inputs.environment || 'production' }}
-            **URL:** ${deploymentUrl}
-            **Commit:** ${{ github.sha }}
-            **Branch:** ${{ github.ref_name }}
-            
-            ### Quick Links
-            - 🌐 [Visit Site](${deploymentUrl})
-            - 📊 [View Analytics](${deploymentUrl}/dashboard/analytics)
-            - 🤖 [Test AI Features](${deploymentUrl}/dashboard/ai-demo)
-            
-            **Build Info:**
-            - Node: ${{ env.NODE_VERSION }}
-            - Build Time: ${new Date().toISOString()}
-            - Deployed by: @${{ github.actor }}
-            `;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
-
-      - name: Create deployment status
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.repos.createDeploymentStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              deployment_id: context.payload.deployment.id,
-              state: 'success',
-              environment_url: '${{ steps.deploy.outputs.url }}',
-              description: 'Deployment successful'
-            });
-
-  # Job 3: Post-Deploy Smoke Tests
-  smoke-tests:
-    name: Post-Deploy Smoke Tests
-    runs-on: ubuntu-latest
-    needs: deploy-vercel
-    timeout-minutes: 10
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install dependencies
-        run: npm install -g playwright @playwright/test
-
-      - name: Wait for deployment
-        run: sleep 30
-
-      - name: Run smoke tests
-        run: |
-          DEPLOY_URL="${{ needs.deploy-vercel.outputs.url }}"
-          
-          echo "Running smoke tests against: $DEPLOY_URL"
-          
-          # Test 1: Homepage loads
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" $DEPLOY_URL)
-          if [ $STATUS -eq 200 ]; then
-            echo "✅ Homepage loads successfully"
-          else
-            echo "❌ Homepage failed with status: $STATUS"
-            exit 1
-          fi
-          
-          # Test 2: Health endpoint
-          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" $DEPLOY_URL/health)
-          if [ $HEALTH_STATUS -eq 200 ]; then
-            echo "✅ Health endpoint responds"
-          else
-            echo "⚠️  Health endpoint returned: $HEALTH_STATUS"
-          fi
-          
-          # Test 3: Build info
-          BUILD_INFO=$(curl -s $DEPLOY_URL/build-info.json)
-          if [ ! -z "$BUILD_INFO" ]; then
-            echo "✅ Build info accessible"
-            echo "$BUILD_INFO"
-          else
-            echo "⚠️  Build info not found"
-          fi
-          
-          # Test 4: Static assets load
-          ASSET_STATUS=$(curl -s -o /dev/null -w "%{http_code}" $DEPLOY_URL/assets/)
-          if [ $ASSET_STATUS -eq 200 ] || [ $ASSET_STATUS -eq 403 ]; then
-            echo "✅ Assets directory accessible"
-          else
-            echo "⚠️  Assets returned: $ASSET_STATUS"
-          fi
-          
-          echo "✅ All smoke tests passed!"
-
-      - name: Run Lighthouse on production
-        uses: treosh/lighthouse-ci-action@v11
-        with:
-          urls: |
-            ${{ needs.deploy-vercel.outputs.url }}
-          uploadArtifacts: true
-          temporaryPublicStorage: true
-
-  # Job 4: Deploy to Kubernetes (Optional)
-  deploy-kubernetes:
-    name: Deploy to Kubernetes
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event.inputs.environment == 'production' || github.ref == 'refs/heads/main'
-    timeout-minutes: 15
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure kubectl
-        uses: azure/k8s-set-context@v3
-        with:
-          method: kubeconfig
-          kubeconfig: ${{ secrets.KUBE_CONFIG }}
-
-      - name: Login to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.REGISTRY_URL }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.REGISTRY_URL }}/rideshare-app:${{ github.sha }}
-            ${{ secrets.REGISTRY_URL }}/rideshare-app:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Update Kubernetes deployment
-        run: |
-          kubectl set image deployment/rideshare-app \
-            rideshare-app=${{ secrets.REGISTRY_URL }}/rideshare-app:${{ github.sha }} \
-            -n rideshare
-          
-          kubectl rollout status deployment/rideshare-app -n rideshare --timeout=5m
-
-      - name: Verify deployment
-        run: |
-          kubectl get pods -n rideshare
-          kubectl get services -n rideshare
-
-  # Job 5: Notify on Success/Failure
-  notify:
-    name: Notify Deployment Status
-    runs-on: ubuntu-latest
-    needs: [deploy-vercel, smoke-tests]
-    if: always()
-    
-    steps:
-      - name: Send Slack notification
-        if: always()
-        uses: slackapi/slack-github-action@v1.25.0
-        with:
-          payload: |
-            {
-              "text": "${{ needs.deploy-vercel.result == 'success' && '✅' || '❌' }} Deployment ${{ needs.deploy-vercel.result }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Deployment Status:* ${{ needs.deploy-vercel.result }}\n*Environment:* ${{ github.event.inputs.environment || 'production' }}\n*Commit:* ${{ github.sha }}\n*Author:* ${{ github.actor }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        continue-on-error: true
-
-      - name: Create GitHub Release
-        if: needs.deploy-vercel.result == 'success' && github.ref == 'refs/heads/main'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
-          body: |
-            ## Changes in this Release
-            - Commit: ${{ github.sha }}
-            - Author: ${{ github.actor }}
-            - Deployed to: ${{ needs.deploy-vercel.outputs.url }}
-          draft: false
-          prerelease: false
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
         continue-on-error: true
