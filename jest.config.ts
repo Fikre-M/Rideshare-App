@@ -6,12 +6,15 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^import\\.meta\\.env$': '<rootDir>/src/__mocks__/env.ts',
+    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': '<rootDir>/__mocks__/fileMock.js',
+    '@emotion/unitless': 'identity-obj-proxy',
   },
   transform: {
-    '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest',
-    '^.+\\.(css|scss|sass)$': 'jest-transform-stub',
-    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': 'jest-transform-stub',
+    '^.+\.(ts|tsx|js|jsx)$': 'babel-jest',
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!axios|react-hot-toast|@emotion|@mui)',
+  ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx,js,jsx}',
@@ -36,6 +39,12 @@ const config: Config = {
     '<rootDir>/src/**/*.{test,spec}.{ts,tsx,js,jsx}',
   ],
   testTimeout: 10000,
+  extensionsToTreatAsEsm: ['\.ts', '\.tsx'],
+  globals: {
+    'ts-jest': {
+      useESM: true,
+    },
+  },
 };
 
 export default config;
