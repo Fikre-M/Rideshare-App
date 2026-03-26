@@ -1,5 +1,5 @@
-// @ts-nocheck
 import { useState } from 'react';
+import type { SelectChangeEvent } from '@mui/material';
 import {
   Box,
   Paper,
@@ -28,27 +28,33 @@ import { useThemeStore } from '../stores/themeStore';
 const Settings = () => {
   const { mode: themeMode, setMode: setThemeMode } = useThemeStore();
 
-  const [settings, setSettings] = useState({
+  interface NotificationSettings { email: boolean; push: boolean; sms: boolean; }
+  interface PrivacySettings { shareLocation: boolean; showProfile: boolean; }
+  interface PreferenceSettings { language: string; currency: string; }
+  interface SettingsState { notifications: NotificationSettings; privacy: PrivacySettings; preferences: PreferenceSettings; }
+
+  const [settings, setSettings] = useState<SettingsState>({
     notifications: { email: true, push: true, sms: false },
     privacy: { shareLocation: true, showProfile: true },
     preferences: { language: 'en', currency: 'USD' },
   });
 
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  interface SnackbarState { open: boolean; message: string; severity: 'success' | 'error' | 'info' | 'warning'; }
+  const [snackbar, setSnackbar] = useState<SnackbarState>({ open: false, message: '', severity: 'success' });
 
-  const handleNotificationChange = (field) => (event) => {
+  const handleNotificationChange = (field: keyof NotificationSettings) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setSettings({ ...settings, notifications: { ...settings.notifications, [field]: event.target.checked } });
   };
 
-  const handlePrivacyChange = (field) => (event) => {
+  const handlePrivacyChange = (field: keyof PrivacySettings) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setSettings({ ...settings, privacy: { ...settings.privacy, [field]: event.target.checked } });
   };
 
-  const handlePreferenceChange = (field) => (event) => {
+  const handlePreferenceChange = (field: keyof PreferenceSettings) => (event: SelectChangeEvent) => {
     setSettings({ ...settings, preferences: { ...settings.preferences, [field]: event.target.value } });
   };
 
-  const handleThemeChange = (event) => {
+  const handleThemeChange = (event: SelectChangeEvent) => {
     setThemeMode(event.target.value);
   };
 
@@ -163,7 +169,7 @@ const Settings = () => {
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity as 'success' | 'error' | 'info' | 'warning'} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>
       </Snackbar>

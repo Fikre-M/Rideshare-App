@@ -20,6 +20,16 @@ const TOKEN_KEY = "ai_rideshare_auth_token";
 const USERS_KEY = "ai_rideshare_users";
 const USER_IMAGES_KEY = "ai_rideshare_user_images";
 
+/** Simple SHA-256 hash via Web Crypto — used only for demo credential storage */
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 export interface User {
   id: string;
   email: string;
@@ -67,7 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
   const navigate = useNavigate();
   
-  const initializeUsers = useCallback(() => {
+  const initializeUsers = useCallback(async () => {
     try {
       const existingUsers = localStorage.getItem(USERS_KEY);
       if (!existingUsers) {
@@ -75,7 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           {
             id: "admin-001",
             email: "admin@airideshare.com",
-            password: "admin123",
+            password: await hashPassword("admin123"),
             name: "AI Admin",
             roles: ["admin"],
             avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
@@ -86,7 +96,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           {
             id: "user-001",
             email: "user@airideshare.com",
-            password: "user123",
+            password: await hashPassword("user123"),
             name: "John Doe",
             roles: ["user"],
             avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
@@ -97,7 +107,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           {
             id: "driver-001",
             email: "driver@airideshare.com",
-            password: "driver123",
+            password: await hashPassword("driver123"),
             name: "Sarah Wilson",
             roles: ["driver"],
             avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
@@ -118,7 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        initializeUsers();
+        await initializeUsers();
         const storedToken = localStorage.getItem(TOKEN_KEY);
         const storedUser = localStorage.getItem('user');
         
@@ -152,7 +162,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!email || !password) throw new Error("Email and password are required");
 
         const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]") as StoredUser[];
-        const foundUser = users.find(u => u.email === email && u.password === password);
+        const hashedInput = await hashPassword(password);
+        const foundUser = users.find(u => u.email === email && u.password === hashedInput);
 
         if (!foundUser) throw new Error("Invalid email or password");
 
@@ -203,7 +214,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const newUser: StoredUser = {
           id: `${role}-${Date.now()}`,
           email,
-          password,
+          password: await hashPassword(password),
           name,
           roles: [role],
           avatar: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000000)}?w=150&h=150&fit=crop&crop=face`,

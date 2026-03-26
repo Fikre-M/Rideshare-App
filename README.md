@@ -1,6 +1,11 @@
 # AI-Powered Rideshare Platform
 
-A modern, intelligent rideshare application built with React and powered by artificial intelligence. This platform features smart driver-passenger matching, dynamic pricing, route optimization, demand prediction, and predictive analytics.
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://ai-rideshare.vercel.app)
+[![React](https://img.shields.io/badge/React-18-blue)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
+[![MUI](https://img.shields.io/badge/MUI-v5-007FFF)](https://mui.com)
+
+A modern, intelligent rideshare application built with React and powered by artificial intelligence. Features smart driver-passenger matching, dynamic pricing, route optimization, demand prediction, and predictive analytics.
 
 ## 🤖 AI Features
 
@@ -89,8 +94,9 @@ A modern, intelligent rideshare application built with React and powered by arti
 
 ### Development Login
 Use these credentials to access the platform:
-- **Admin**: admin@example.com / admin123
-- **User**: user@example.com / user123
+- **Admin**: admin@airideshare.com / admin123
+- **User**: user@airideshare.com / user123
+- **Driver**: driver@airideshare.com / driver123
 
 ### AI Features Demo
 1. **Smart Matching**: Navigate to AI Dispatch → Smart Matching
@@ -172,25 +178,20 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🎨 Screenshots
 
-### AI Dashboard
-- Real-time analytics and insights
-- Predictive demand forecasting
-- Revenue projections
+### Dashboard & AI Features
+![AI Dashboard](docs/screenshots/dashboard.png)
+> Real-time KPIs, demand forecasting chart, and live driver map
 
-### Smart Matching
-- AI-powered driver selection
-- Multi-factor matching algorithm
-- Real-time availability tracking
+![Smart Matching](docs/screenshots/smart-matching.png)
+> AI-powered driver selection with radar chart scoring breakdown
 
-### Dynamic Pricing
-- Surge pricing visualization
-- Factor-based pricing breakdown
-- Real-time price optimization
+![Dynamic Pricing](docs/screenshots/dynamic-pricing.png)
+> Surge pricing visualization with factor-based breakdown
 
-### Route Optimization
-- AI-powered route planning
-- Traffic-aware pathfinding
-- Fuel efficiency optimization
+![AI Chat Assistant](docs/screenshots/chatbot.png)
+> Markdown-enabled chat with conversation history and model selector
+
+> **Note:** Run `npm run dev` and take screenshots to populate the `docs/screenshots/` folder.
 
 ## 🔮 Future Enhancements
 
