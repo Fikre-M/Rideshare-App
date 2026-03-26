@@ -5,6 +5,8 @@ import googleAIService from './googleAIService';
 import openAIService from './openAIService';
 import mapboxService from './mapboxService';
 import { useApiKeyStore } from '../stores/apiKeyStore';
+import { trackApiError } from '../utils/sentry';
+import { retryWithBackoff, CircuitBreaker } from '../utils/retry';
 
 const AI_API_BASE = import.meta.env.VITE_AI_API_URL || 'http://localhost:8001/api/ai';
 const USE_ML_MODELS = import.meta.env.VITE_USE_ML_MODELS !== 'false';
@@ -57,6 +59,11 @@ class AIService {
   private apiClient: AxiosInstance;
   private mlService: typeof MLAIService;
   private mlInitialized = false;
+  
+  // Circuit breakers for different services
+  private openAICircuitBreaker: CircuitBreaker<any>;
+  private googleAICircuitBreaker: CircuitBreaker<any>;
+  private mapboxCircuitBreaker: CircuitBreaker<any>;
 
   constructor() {
     this.apiClient = axios.create({
@@ -72,6 +79,25 @@ class AIService {
     });
 
     this.mlService = MLAIService;
+    
+    // Initialize circuit breakers
+    this.openAICircuitBreaker = new CircuitBreaker({
+      threshold: 5, // Open after 5 failures
+      timeout: 60000, // 1 minute timeout
+      resetTimeout: 300000, // 5 minutes to try again
+    });
+    
+    this.googleAICircuitBreaker = new CircuitBreaker({
+      threshold: 5,
+      timeout: 60000,
+      resetTimeout: 300000,
+    });
+    
+    this.mapboxCircuitBreaker = new CircuitBreaker({
+      threshold: 5,
+      timeout: 60000,
+      resetTimeout: 300000,
+    });
   }
 
   private isOpenAIAvailable(): boolean {
@@ -119,33 +145,84 @@ class AIService {
   }
 
   async sendChatMessage(message: string, context: ChatContext = {}): Promise<unknown> {
+    const retryOptions = {
+      maxRetries: 3,
+      baseDelay: 1000,
+      maxDelay: 10000,
+      retryCondition: (error: any) => {
+        // Retry on network errors and rate limits
+        return error.code === 'ECONNRESET' || 
+               error.code === 'ENOTFOUND' || 
+               error.response?.status === 429 ||
+               error.response?.status >= 500;
+      },
+      onRetry: (attempt: number, error: any) => {
+        console.warn(`Chat message retry attempt ${attempt}:`, error.message);
+        trackApiError('google-ai-chat', error instanceof Error ? error : new Error(String(error)), error.response?.status);
+      }
+    };
+
     try {
-      return await googleAIService.sendChatMessage(message, context.conversationId);
+      return await this.googleAICircuitBreaker.execute(async () => {
+        return await retryWithBackoff(
+          () => googleAIService.sendChatMessage(message, context.conversationId),
+          retryOptions
+        );
+      });
     } catch (error) {
-      console.error('Chat AI error:', error);
+      console.error('Chat AI error after retries:', error);
+      trackApiError('google-ai-chat-fallback', error instanceof Error ? error : new Error(String(error)));
       return googleAIService.getMockResponse(message);
     }
   }
 
   async optimizeRoute(waypoints: Coordinate[], preferences: Record<string, unknown> = {}): Promise<unknown> {
+    const retryOptions = {
+      maxRetries: 2,
+      baseDelay: 2000,
+      maxDelay: 15000,
+      retryCondition: (error: any) => {
+        return error.code === 'ECONNRESET' || 
+               error.code === 'ENOTFOUND' || 
+               error.response?.status === 429 ||
+               error.response?.status >= 500;
+      },
+      onRetry: (attempt: number, error: any) => {
+        console.warn(`Route optimization retry attempt ${attempt}:`, error.message);
+        trackApiError('route-optimization', error instanceof Error ? error : new Error(String(error)), error.response?.status);
+      }
+    };
+
     try {
       if (this.isOpenAIAvailable() && this.isMapboxAvailable() && waypoints.length >= 2) {
-        const origin = waypoints[0];
-        const destination = waypoints[waypoints.length - 1];
-        const mapboxResult = await mapboxService.getRouteWithTraffic(origin, destination, { alternatives: true });
+        return await this.mapboxCircuitBreaker.execute(async () => {
+          const origin = waypoints[0];
+          const destination = waypoints[waypoints.length - 1];
+          
+          const mapboxResult = await retryWithBackoff(
+            () => mapboxService.getRouteWithTraffic(origin, destination, { alternatives: true }),
+            { ...retryOptions, maxRetries: 1 }
+          );
 
-        if (mapboxResult.routes.length > 0) {
-          const aiResult = await openAIService.optimizeRoute(mapboxResult.routes, preferences);
-          const recommended = mapboxResult.routes[aiResult.recommendedRouteIndex];
-          return {
-            optimizedRoute: recommended,
-            allRoutes: mapboxResult.routes,
-            recommendation: aiResult,
-            estimatedTime: Math.round(recommended.durationMinutes),
-            estimatedDistance: recommended.distanceKm,
-            source: 'openai-mapbox',
-          };
-        }
+          if (mapboxResult.data.routes.length > 0) {
+            const aiResult = await this.openAICircuitBreaker.execute(async () => {
+              return await retryWithBackoff(
+                () => openAIService.optimizeRoute(mapboxResult.data.routes, preferences),
+                { ...retryOptions, maxRetries: 2 }
+              );
+            });
+            
+            const recommended = mapboxResult.data.routes[aiResult.data.recommendedRouteIndex];
+            return {
+              optimizedRoute: recommended,
+              allRoutes: mapboxResult.data.routes,
+              recommendation: aiResult.data,
+              estimatedTime: Math.round(recommended.durationMinutes),
+              estimatedDistance: recommended.distanceKm,
+              source: 'openai-mapbox',
+            };
+          }
+        });
       }
 
       if (USE_ML_MODELS) {
@@ -153,13 +230,10 @@ class AIService {
         return await (this.mlService as any).optimizeRoute(waypoints, preferences);
       }
 
-      const response = await this.apiClient.post('/route-optimization', {
-        waypoints,
-        preferences: { prioritizeTime: true, avoidTolls: false, avoidHighways: false, ...preferences },
-      });
-      return (response as any).data;
+      return this.mockRouteOptimization(waypoints);
     } catch (error) {
-      console.error('Route optimization error:', error);
+      console.error('Route optimization error after retries:', error);
+      trackApiError('route-optimization-fallback', error instanceof Error ? error : new Error(String(error)));
       return this.mockRouteOptimization(waypoints);
     }
   }
