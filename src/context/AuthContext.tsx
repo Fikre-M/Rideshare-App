@@ -19,6 +19,9 @@ import {
 const TOKEN_KEY = "ai_rideshare_auth_token";
 const USERS_KEY = "ai_rideshare_users";
 const USER_IMAGES_KEY = "ai_rideshare_user_images";
+// Bump this version whenever the default user schema changes (e.g. password hashing)
+const USERS_VERSION_KEY = "ai_rideshare_users_version";
+const CURRENT_USERS_VERSION = "2"; // v2 = SHA-256 hashed passwords
 
 /** Simple SHA-256 hash via Web Crypto — used only for demo credential storage */
 async function hashPassword(password: string): Promise<string> {
@@ -79,8 +82,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   
   const initializeUsers = useCallback(async () => {
     try {
-      const existingUsers = localStorage.getItem(USERS_KEY);
-      if (!existingUsers) {
+      const storedVersion = localStorage.getItem(USERS_VERSION_KEY);
+      // Re-seed if missing or on an older schema version (e.g. plaintext passwords)
+      if (!localStorage.getItem(USERS_KEY) || storedVersion !== CURRENT_USERS_VERSION) {
         const defaultUsers: StoredUser[] = [
           {
             id: "admin-001",
@@ -119,6 +123,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           },
         ];
         localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
+        localStorage.setItem(USERS_VERSION_KEY, CURRENT_USERS_VERSION);
       }
     } catch (error) {
       console.error("Error initializing users:", error);
@@ -329,14 +334,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return userData?.avatar || null;
   }, []);
 
+  // Derive isAuthenticated without side effects in useMemo
   const isAuthenticated = useMemo(() => {
     if (!user || !token) return false;
-    if (user.exp && user.exp * 1000 < Date.now()) {
-      logout();
-      return false;
-    }
+    if (user.exp && user.exp * 1000 < Date.now()) return false;
     return true;
-  }, [user, token, logout]);
+  }, [user, token]);
+
+  // Separate effect to handle expired sessions
+  useEffect(() => {
+    if (user && user.exp && user.exp * 1000 < Date.now()) {
+      logout();
+    }
+  }, [user, logout]);
 
   const value: AuthContextType = {
     user,
