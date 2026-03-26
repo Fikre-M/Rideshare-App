@@ -15,6 +15,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Fab, Tooltip, useMediaQuery } from "@mui/material";
 import { Chat as ChatIcon } from "@mui/icons-material";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
+import { AnalyticsProvider, FeedbackButton, FeedbackDialog, AnalyticsDashboard } from "./components/common/AnalyticsComponents";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/common/LoadingScreen";
 import ScrollToTop from "./components/common/ScrollToTop";
@@ -26,6 +27,7 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 import InstallPrompt from "./components/pwa/InstallPrompt";
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { useApiKeyStore } from "./stores/apiKeyStore";
+import { useChatStore } from "./stores/chatStore";
 import { useThemeStore } from "./stores/themeStore";
 import config from "./utils/config";
 import { queryClient } from "./utils/queryClient";
@@ -119,7 +121,10 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const apiKeyStore = useApiKeyStore();
+  const { user } = useAuth();
   void apiKeyStore; // store is used via getState() below
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -228,22 +233,16 @@ const AppRoutes = () => {
       
       {/* Floating Action Button to open ChatBot */}
       {!chatOpen && (
-        <Tooltip title="Open AI Assistant (Cmd/Ctrl + Shift + A)" placement="left">
+        <Tooltip title="AI Assistant (Ctrl+/)" placement="left">
           <Fab
             color="primary"
-            aria-label="open ai chat"
+            aria-label="chat"
             onClick={() => setChatOpen(true)}
             sx={{
               position: 'fixed',
-              bottom: isMobile ? 16 : 24,
-              right: isMobile ? 16 : 24,
-              zIndex: 9998,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5568d3 0%, #63408a 100%)',
-                transform: 'scale(1.05)',
-              },
-              transition: 'all 0.2s ease-in-out',
+              bottom: isMobile ? 80 : 24,
+              right: 24,
+              zIndex: 1000,
             }}
           >
             <ChatIcon />
@@ -260,7 +259,7 @@ const AppRoutes = () => {
             // TODO: Implement full AI command routing after fixing import issues
             // For now, handle basic commands
             if (command === 'chat') {
-              setChatBotOpen(true);
+              setChatOpen(true);
               const chatStore = useChatStore.getState();
               if (!chatStore.activeConversationId) {
                 chatStore.createConversation();
@@ -273,7 +272,7 @@ const AppRoutes = () => {
                 type: 'text'
               });
             } else if (command === 'help') {
-              setChatBotOpen(true);
+              setChatOpen(true);
               const chatStore = useChatStore.getState();
               if (!chatStore.activeConversationId) {
                 chatStore.createConversation();
@@ -297,7 +296,7 @@ Keyboard Shortcuts:
               });
             } else {
               // Navigate to AI demo for other commands
-              navigate('/dashboard/ai-demo?feature=' + command);
+              window.location.href = '/dashboard/ai-demo?feature=' + command;
             }
             
             // Log in development
@@ -345,36 +344,38 @@ const App = () => {
   const theme = React.useMemo(() => buildTheme(effectiveMode), [effectiveMode]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <HelmetProvider>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <MotionProvider>
-              <SnackbarProvider 
-                maxSnack={3}
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                autoHideDuration={5000}
-                preventDuplicate
-              >
-                <GlobalErrorHandler>
-                  <AuthProvider>
-                    <Suspense fallback={<LoadingScreen />}>
-                      <AppRoutes />
-                    </Suspense>
-                    
-                    <Toaster position="top-right" />
-                  </AuthProvider>
-                </GlobalErrorHandler>
-              </SnackbarProvider>
-            </MotionProvider>
-          </ThemeProvider>
-        </HelmetProvider>
-      </Router>
-    </QueryClientProvider>
+    <AnalyticsProvider>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <HelmetProvider>
+            <ThemeProvider theme={theme}>
+              <CssBaseline />
+              <MotionProvider>
+                <SnackbarProvider 
+                  maxSnack={3}
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  autoHideDuration={5000}
+                  preventDuplicate
+                >
+                  <GlobalErrorHandler>
+                    <AuthProvider>
+                      <Suspense fallback={<LoadingScreen />}>
+                        <AppRoutes />
+                      </Suspense>
+                      
+                      <Toaster position="top-right" />
+                    </AuthProvider>
+                  </GlobalErrorHandler>
+                </SnackbarProvider>
+              </MotionProvider>
+            </ThemeProvider>
+          </HelmetProvider>
+        </Router>
+      </QueryClientProvider>
+    </AnalyticsProvider>
   );
 };
 
